@@ -12,7 +12,6 @@ data class PlannedSet(
     val kind: ExerciseKind,
     val reps: Int?,
     val weightKg: Double?,
-    val eachSide: Boolean,
     val maxBreakSec: Int?,
     val repeat: Int,
     val repeatCount: Int,
@@ -51,7 +50,7 @@ fun buildPlan(w: Workout): List<Step> {
             val count = e.sets.coerceAtLeast(1)
             repeat(count) { r ->
                 steps += Step.Work(
-                    PlannedSet(c, slot, e.name, e.kind, reps, e.weightKg, e.eachSide, e.maxBreakSec, r, count, overridden),
+                    PlannedSet(c, slot, e.name, e.kind, reps, e.weightKg, e.maxBreakSec, r, count, overridden),
                 )
             }
             val lastInCircuit = slot == list.lastIndex

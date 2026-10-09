@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import dev.kinetik.model.Exercise
 import dev.kinetik.model.ExerciseKind
 import dev.kinetik.ui.components.Label
-import dev.kinetik.ui.components.SwitchRow
 import dev.kinetik.ui.theme.K
 import dev.kinetik.ui.theme.KText
 
@@ -110,7 +109,6 @@ fun ExerciseFields(e: Exercise, onChange: (Exercise) -> Unit) {
                 onChange(e.copy(maxBreakSec = it))
             }
         }
-        SwitchRow("Each side", e.eachSide) { onChange(e.copy(eachSide = it)) }
         OutlinedTextField(
             weightText,
             { weightText = it; onChange(e.copy(weightKg = it.toDoubleOrNull())) },

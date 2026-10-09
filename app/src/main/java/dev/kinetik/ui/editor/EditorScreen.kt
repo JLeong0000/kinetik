@@ -209,7 +209,6 @@ private fun ExerciseRow(e: Exercise, lifted: Boolean, modifier: Modifier) {
         Text(shortLabel(e, e.startReps), Modifier.width(44.dp), style = KText.mono(20.sp).copy(color = K.TealHi))
         Text(e.name, Modifier.weight(1f), style = KText.body.copy(fontSize = 15.sp), maxLines = 1)
         e.weightKg?.let { Tag("${if (it % 1.0 == 0.0) it.toInt() else it} kg") }
-        if (e.eachSide) Tag("each side")
     }
 }
 

@@ -60,9 +60,7 @@ class PlanTest {
         val steps = buildPlan(Seed.legs())
         assertEquals(35, steps.size)
         assertEquals("1.1 Shrimp squats 11", describe(steps[0]))
-        assertTrue((steps[0] as Step.Work).set.eachSide)
         assertEquals("6.1 Hand assisted pistol squats MAX", describe(steps.last()))
-        assertTrue((steps.last() as Step.Work).set.eachSide)
     }
 
     @Test fun absGolden() {

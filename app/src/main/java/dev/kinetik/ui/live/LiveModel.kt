@@ -86,7 +86,6 @@ fun liveModel(s: SessionState): LiveModel {
         sub = work?.let { "Ex ${slots.indexOf(it.slot) + 1} of ${slots.size}" } ?: "Rest",
         tags = buildList {
             work?.weightKg?.let { add(kg(it)) }
-            if (work?.eachSide == true) add("each side")
             if (work != null && work.repeatCount > 1) add("${work.repeat + 1} of ${work.repeatCount}")
         },
         beepZone = restStep != null && s.restRemainingMs <= 5_000,

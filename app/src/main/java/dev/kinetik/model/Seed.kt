@@ -48,16 +48,16 @@ object Seed {
     fun legs() = Workout(
         name = "Legs", circuits = 6, repDrop = 1, restExerciseSec = 180, restCircuitSec = 240,
         exercises = listOf(
-            Exercise(name = "Shrimp squats", startReps = 11, eachSide = true),
+            Exercise(name = "Shrimp squats", startReps = 11),
             Exercise(name = "Hand assisted Nordic curls", startReps = 10),
-            Exercise(name = "Hand assisted pistol squats", startReps = 11, eachSide = true),
+            Exercise(name = "Hand assisted pistol squats", startReps = 11),
             Exercise(name = "Single calf raises", startReps = 15),
         ),
         overrides = listOf(
             CircuitOverride(circuit = 4, scope = WHOLE,
                 exercises = listOf(Exercise(name = "Hand assisted Nordic curls", kind = MAX_REPS, maxBreakSec = 10))),
             CircuitOverride(circuit = 5, scope = WHOLE,
-                exercises = listOf(Exercise(name = "Hand assisted pistol squats", kind = MAX_REPS, maxBreakSec = 10, eachSide = true))),
+                exercises = listOf(Exercise(name = "Hand assisted pistol squats", kind = MAX_REPS, maxBreakSec = 10))),
         ),
     )
 

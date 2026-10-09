@@ -20,7 +20,6 @@ fun announce(p: PlannedSet): String = buildString {
         ExerciseKind.MAX_REPS -> append(", max")
         ExerciseKind.MAX_TIME -> append(", max time")
     }
-    if (p.eachSide) append(", each side")
     if (p.repeatCount > 1) append(", ${p.repeat + 1} of ${p.repeatCount}")
 }
 

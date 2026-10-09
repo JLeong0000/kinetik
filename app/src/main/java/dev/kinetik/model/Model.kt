@@ -18,7 +18,6 @@ data class Exercise(
     val kind: ExerciseKind = ExerciseKind.REPS,
     val startReps: Int = 10,
     val weightKg: Double? = null,
-    val eachSide: Boolean = false,
     val sets: Int = 1,
     val maxBreakSec: Int? = null,
 )

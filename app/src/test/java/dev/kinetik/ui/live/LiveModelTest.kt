@@ -66,9 +66,9 @@ class LiveModelTest {
         assertEquals(1, m.segments)
     }
 
-    @Test fun weightAndEachSideTags() {
+    @Test fun weightTagOnly() {
         assertTrue("10 kg" in liveModel(SessionState.start(Seed.push())).tags)
-        assertTrue("each side" in liveModel(SessionState.start(Seed.legs())).tags)
+        assertTrue(liveModel(SessionState.start(Seed.legs())).tags.isEmpty())
     }
 
     // Final check on device: "MAX" at rep-number size wrapped onto two lines and overflowed the ring.
