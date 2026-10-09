@@ -10,6 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import kotlinx.coroutines.launch
 import org.junit.Test
 
 class WidgetModelTest {
@@ -59,5 +60,25 @@ class WidgetModelTest {
         val m = widgetModel(done, lib)
         assertEquals("Workout complete", m.title)
         assertTrue(m.controls.isEmpty())
+    }
+
+    // Review 2: the idle widget said "1 circuits" for regular workouts.
+    @Test fun idleRegularWorkoutUsesBlocks() {
+        val reg = dev.kinetik.model.newRegularWorkout()
+        val m = widgetModel(null, Library(groups = listOf(dev.kinetik.model.Group(name = "G", workouts = listOf(reg)))))
+        assertTrue(m.sub, m.sub.startsWith("1 block · ~"))
+    }
+
+    // Review 2: the widget must only see a new model when what it shows changes, not on every 100 ms tick.
+    @Test fun modelsAreDedupedAcrossTicks() = kotlinx.coroutines.test.runTest {
+        val session = kotlinx.coroutines.flow.MutableStateFlow<SessionState?>(reduce(pull, SessionEvent.Done))
+        val library = kotlinx.coroutines.flow.MutableStateFlow(lib)
+        val seen = mutableListOf<WidgetModel>()
+        val job = launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) { widgetModels(session, library).collect { seen += it } }
+        repeat(9) { session.value = reduce(session.value!!, SessionEvent.Tick(100)) } // 3:00 → 2:59.1, still shows 3:00
+        assertEquals(1, seen.size)
+        session.value = reduce(session.value!!, SessionEvent.Tick(100)) // now 2:59
+        assertEquals(2, seen.size)
+        job.cancel()
     }
 }

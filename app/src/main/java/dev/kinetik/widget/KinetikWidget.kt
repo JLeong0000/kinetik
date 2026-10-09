@@ -58,9 +58,7 @@ class KinetikWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val app = context.app
         provideContent {
-            val s by app.session.state.collectAsState()
-            val lib by app.store.library.collectAsState()
-            val m = widgetModel(s, lib)
+            val m by app.widget.collectAsState()
             if (LocalSize.current.height < FULL.height) CompactContent(m) else WidgetContent(m)
         }
     }

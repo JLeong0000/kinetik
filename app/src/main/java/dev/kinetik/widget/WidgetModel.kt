@@ -2,6 +2,10 @@ package dev.kinetik.widget
 
 import dev.kinetik.model.Library
 import dev.kinetik.model.upNext
+import dev.kinetik.model.summary
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import dev.kinetik.plan.buildPlan
 import dev.kinetik.plan.estimateSeconds
 import dev.kinetik.session.Control
@@ -26,7 +30,7 @@ fun widgetModel(s: SessionState?, lib: Library): WidgetModel {
     if (s == null) {
         val w = lib.upNext() ?: return WidgetModel("Kinetik", "No workouts", "", "", false, emptyList(), null)
         val minutes = (estimateSeconds(buildPlan(w)) + 59) / 60
-        return WidgetModel("Up next", w.name, "", "${w.circuits} circuits · ~$minutes min", false, emptyList(), w.id)
+        return WidgetModel("Up next", w.name, "", "${w.summary().substringBefore(" ·")} · ~$minutes min", false, emptyList(), w.id)
     }
     if (s.phase == Phase.FINISHED) {
         return WidgetModel(s.workoutName, "Workout complete", "", "", false, emptyList(), null)
@@ -43,3 +47,7 @@ fun widgetModel(s: SessionState?, lib: Library): WidgetModel {
         startWorkoutId = null,
     )
 }
+
+/** The widget's content over time: a new value only when what it shows changes (about once a second in a rest). */
+fun widgetModels(session: Flow<SessionState?>, library: Flow<Library>): Flow<WidgetModel> =
+    combine(session, library, ::widgetModel).distinctUntilChanged()

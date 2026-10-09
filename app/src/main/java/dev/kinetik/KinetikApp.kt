@@ -7,11 +7,14 @@ import dev.kinetik.session.SessionController
 import dev.kinetik.store.WorkoutStore
 import dev.kinetik.widget.KinetikWidget
 import dev.kinetik.widget.widgetModel
+import dev.kinetik.widget.widgetModels
+import dev.kinetik.widget.WidgetModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 class KinetikApp : Application() {
@@ -20,6 +23,8 @@ class KinetikApp : Application() {
     lateinit var cues: CuePlayer
         private set
     lateinit var session: SessionController
+        private set
+    lateinit var widget: StateFlow<WidgetModel>
         private set
 
     /** Expanded home-screen groups; null until Home first shows. Not saved, so a restart starts collapsed. */
@@ -37,11 +42,11 @@ class KinetikApp : Application() {
                 cues.beepVolume = it.settings.beepVolume
             }
         }
-        // Redraw home-screen widgets only when what they show changes (about once a second during a rest).
+        // Widgets read this deduped model, and are poked only when it changes (about once a second during a rest).
+        widget = widgetModels(session.state, store.library)
+            .stateIn(scope, SharingStarted.Eagerly, widgetModel(session.state.value, store.library.value))
         scope.launch {
-            combine(session.state, store.library, ::widgetModel)
-                .distinctUntilChanged()
-                .collect { KinetikWidget().updateAll(this@KinetikApp) }
+            widget.collect { runCatching { KinetikWidget().updateAll(this@KinetikApp) } }
         }
     }
 }
