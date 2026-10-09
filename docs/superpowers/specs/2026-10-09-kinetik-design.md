@@ -1,7 +1,7 @@
 # Kinetik — design spec
 
 Date: 2026-10-09
-Status: draft, awaiting review
+Status: open questions resolved, awaiting final approval
 Visual reference: [`docs/design/mockup.html`](../../design/mockup.html) (open in a browser; the rest screens are animated)
 
 ## 1. What this is
@@ -42,7 +42,7 @@ Reps for exercise *e* in circuit *c* (0-based) = `max(1, startReps(e) − c × d
 | **Max reps** | `MAX` | No target. Optional **max break** (e.g. 10 s): a BREAK button starts that countdown with beeps, and you tap again to continue. Tap DONE when finished. |
 | **Max time** | `MAX TIME` | A stopwatch counts up from when the set starts. Tap DONE to stop it. Nothing is saved. |
 
-Optional modifiers on any exercise: **weight** (e.g. 10 kg, display only), **each side** (shown as "each leg"/"each side", spoken the same way) and **sets** (e.g. ×4: the exercise is repeated that many times in a row, with an optional short rest between repeats that defaults to 0:30 and is editable, before the normal between-exercise rest).
+Optional modifiers on any exercise: **weight** (e.g. 10 kg, display only), **each side** (shown as "each leg"/"each side", spoken the same way) and **sets** (e.g. ×4: the exercise is repeated that many times back to back with **no rest between repeats**. Tap DONE after each one, and the next starts at once and is announced. The normal between-exercise rest follows the last repeat).
 
 ### 2.3 Overrides
 
@@ -59,10 +59,10 @@ The app ships with the owner's four workouts already entered (they can edit ever
 
 | Workout | Circuits | Drop | Exercises (start reps) | Overrides |
 |---|---|---|---|---|
-| Pull | 5 | −2 | Pull ups 8, Chin ups 8, Inverted pull up rows 9, Inverted chin up rows 9 | C4: slots 1–2 → max-time negatives ×4 (*see open question 1*). C5: whole → max alternating chin-up / pull-up negatives |
+| Pull | 5 | −2 | Pull ups 8, Chin ups 8, Inverted pull up rows 9, Inverted chin up rows 9 | C4: slots 1–2 → max-time negatives ×4 each, no rest between repeats. C5: whole → max alternating chin-up / pull-up negatives |
 | Push | 6 | −1 | Dips 13 (10 kg), Pike push ups 11, Archer push ups 12, Pseudo push ups 11 | C5: whole → max dips, 10 s break. C6: whole → max push ups, 10 s break |
 | Legs | 6 | −1 | Shrimp squats 11 (each leg), Hand-assisted Nordic curls 10, Hand-assisted pistol squats 11 (each leg), Single calf raises 15 | C5: whole → max hand-assisted Nordic curls, 10 s break. C6: whole → max hand-assisted pistol squats, 10 s break |
-| Abs | 5 (4 + 1) | −1 | Hanging knee twists 8, Hanging leg raises 9 | C5: *see open question 2* |
+| Abs | 5 (4 + 1) | −1 | Hanging knee twists 8, Hanging leg raises 9 | C5: max round, slots 1–2 → max reps (no break limit), with normal rests |
 
 All four use 3:00 between exercises. Pull, Push and Legs use 4:00 between circuits and Abs uses 3:00.
 
@@ -168,8 +168,12 @@ The editor changes a `Workout`, `store` saves it, and Home and the Editor recomp
 
 Workout history and logging, progress charts, accounts and sync, iOS, a shared exercise library across workouts, an "Exercises" tab (removed from the mockup's nav, leaving Workouts and Settings), demonstration images or video, Wear OS, and widgets.
 
-## 9. Open questions (please confirm in review)
+## 9. Resolved questions
 
-1. **Pull C4:** does "swap PU/CU w 4 × max time negs" mean slots 1 and 2 each become max-time negatives ×4 (8 negatives in total), or that the pair is replaced by 4 negatives in total? The spec currently assumes **each slot ×4**, with 0:30 between repeats. What rest do you actually take between negatives?
-2. **Abs "4+1":** is circuit 5 a max round (if so, of which exercise?) or one more normal circuit at the dropped reps? The spec currently assumes **one more normal circuit** (reps 4 and 5).
-3. **Whole-circuit overrides:** the spec assumes Push/Legs C5 and C6, and Pull C5, are single max-effort sets (each followed by the 4:00 circuit rest). Confirm.
+1. **Pull C4:** pull ups and chin ups each become max-time negatives ×4, done back to back with no rest between negatives.
+2. **Abs "4+1":** circuit 5 is a max round. Both exercises become max reps, with the normal 3:00 rests.
+3. **Whole-circuit overrides:** Pull C5, and Push/Legs C5 and C6, are single max-effort sets, each followed by the 4:00 circuit rest.
+
+## 10. Environment
+
+Android Studio 2026.2 with its bundled JBR (Java 25), SDK platform `android-36`, build-tools 36.1.0, and platform-tools (adb) in `~/Library/Android/sdk`. adb isn't on the shell PATH yet, so builds and installs will call it by its full path or add it to PATH.
