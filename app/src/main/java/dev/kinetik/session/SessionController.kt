@@ -29,6 +29,7 @@ class SessionController(
     private val presses = PressGate()
 
     fun start(workoutId: String) {
+        if (!canStart(_state.value)) return
         val w = store.library.value.workout(workoutId) ?: return
         loop?.cancel()
         apply(null, null, SessionState.start(w))
@@ -47,7 +48,10 @@ class SessionController(
     /** Ticks always apply; button presses (UI, notification, headphones) pass through [PressGate]. */
     fun send(e: SessionEvent) {
         val prev = _state.value ?: return
-        if (e !is SessionEvent.Tick && !presses.allow(SystemClock.elapsedRealtime())) return
+        if (e !is SessionEvent.Tick) {
+            val hold = if (e == SessionEvent.Done) AFTER_DONE_HOLD_MS else PRESS_WINDOW_MS
+            if (!presses.allow(SystemClock.elapsedRealtime(), hold)) return
+        }
         val next = reduce(prev, e)
         if (next != prev) apply(prev, e, next)
     }

@@ -65,7 +65,8 @@ fun reduce(s: SessionState, e: SessionEvent): SessionState {
     return when (e) {
         is SessionEvent.Tick -> tick(s, e.deltaMs)
         SessionEvent.Done -> if (s.step is Step.Work) advance(s) else s
-        SessionEvent.TogglePause -> s.copy(phase = if (s.phase == Phase.PAUSED) Phase.RUNNING else Phase.PAUSED)
+        SessionEvent.TogglePause ->
+            if (!s.isRest) s else s.copy(phase = if (s.phase == Phase.PAUSED) Phase.RUNNING else Phase.PAUSED)
         SessionEvent.MinusThirty -> {
             if (!s.isRest) return s
             val left = maxOf(0, s.restRemainingMs - 30_000)

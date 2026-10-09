@@ -25,7 +25,7 @@ fun KinetikNav(mode: LayoutMode) {
         composable("home") {
             HomeScreen(
                 mode = mode,
-                onStart = { id -> app.session.start(id); nav.navigate("live") },
+                onStart = { id -> app.session.start(id); nav.navigate("live") { launchSingleTop = true } },
                 onEdit = { id -> nav.navigate("edit/$id") },
                 onSettings = { nav.navigate("settings") },
             )

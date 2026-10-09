@@ -70,4 +70,10 @@ class LiveModelTest {
         assertTrue("10 kg" in liveModel(SessionState.start(Seed.push())).tags)
         assertTrue("each side" in liveModel(SessionState.start(Seed.legs())).tags)
     }
+
+    // Final check on device: "MAX" at rep-number size wrapped onto two lines and overflowed the ring.
+    @Test fun maxIsMarkedAsAWordSoItIsDrawnSmaller() {
+        assertTrue(liveModel(SessionState.start(Seed.push()).copy(index = 32)).bigIsWord)
+        assertFalse(liveModel(pull).bigIsWord)
+    }
 }

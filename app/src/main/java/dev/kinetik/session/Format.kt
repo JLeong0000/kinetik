@@ -45,3 +45,9 @@ fun primaryEvent(s: SessionState): SessionEvent? = when {
     s.step is Step.Work -> SessionEvent.Done
     else -> SessionEvent.TogglePause
 }
+
+/** The foreground service (notification, wake lock, media button) runs only while a workout is in progress. */
+fun serviceShouldRun(s: SessionState?): Boolean = s != null && s.phase != Phase.FINISHED
+
+/** A workout can only start when none is running, so a double-tapped START starts once. */
+fun canStart(current: SessionState?): Boolean = current == null

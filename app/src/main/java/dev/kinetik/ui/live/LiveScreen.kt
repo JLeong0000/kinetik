@@ -263,7 +263,12 @@ private fun RingBlock(m: LiveModel, modifier: Modifier, stroke: Dp, bigSize: Tex
                 )
             } else {
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text(m.big, style = KText.display(bigSize, 900).copy(color = K.TealHi, shadow = Shadow(K.Teal.copy(alpha = 0.5f), blurRadius = 34f)))
+                    Text(
+                        m.big,
+                        style = KText.display(if (m.bigIsWord) bigSize * 0.5f else bigSize, 900)
+                            .copy(color = K.TealHi, shadow = Shadow(K.Teal.copy(alpha = 0.5f), blurRadius = 34f)),
+                        maxLines = 1,
+                    )
                     m.unit?.let { Text(it, Modifier.padding(start = 4.dp, bottom = 14.dp), style = KText.body.copy(color = K.Muted, fontSize = 18.sp)) }
                 }
             }

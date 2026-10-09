@@ -24,6 +24,7 @@ import dev.kinetik.session.Phase
 import dev.kinetik.session.SessionEvent
 import dev.kinetik.session.SessionState
 import dev.kinetik.session.notificationText
+import dev.kinetik.session.serviceShouldRun
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -64,7 +65,10 @@ class WorkoutService : Service() {
         }
 
         scope.launch {
-            app.session.state.collect { s -> if (s != null) show(s) }
+            app.session.state.collect { s ->
+                // Finished or ended: drop the notification, wake lock and media session straight away.
+                if (serviceShouldRun(s)) show(s!!) else stopSelf()
+            }
         }
     }
 

@@ -143,4 +143,25 @@ class SessionTest {
         val neg = (pull.steps[24] as Step.Work).set
         assertEquals("Pull up negatives · max time (1/4)", setLabel(neg))
     }
+
+    // Final review: a stale notification Pause tapped as a set starts must not freeze the set.
+    @Test fun pauseIsIgnoredDuringASet() {
+        val s = SessionState.start(two)
+        assertEquals(s, s.after(SessionEvent.TogglePause))
+    }
+
+    // Final review: the service, wake lock and media session stop when the workout completes.
+    @Test fun serviceRunsOnlyWhileAWorkoutIsInProgress() {
+        val s = SessionState.start(two)
+        assertTrue(serviceShouldRun(s))
+        assertTrue(serviceShouldRun(s.after(SessionEvent.Done)))
+        assertEquals(false, serviceShouldRun(s.after(SessionEvent.Done, SessionEvent.Skip, SessionEvent.Done)))
+        assertEquals(false, serviceShouldRun(null))
+    }
+
+    // Final review: a double-tapped START must not start the workout twice.
+    @Test fun aSecondStartIsIgnoredWhileASessionExists() {
+        assertTrue(canStart(null))
+        assertEquals(false, canStart(SessionState.start(two)))
+    }
 }

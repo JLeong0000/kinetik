@@ -21,4 +21,12 @@ class PressGateTest {
     }
 
     @Test fun firstPressIsAlwaysAllowed() = assertTrue(PressGate().allow(0))
+
+    // Final review: after DONE the rest controls appear under the thumb, so a slow second tap must not hit Skip.
+    @Test fun aLongerHoldCanFollowAPress() {
+        val gate = PressGate(300)
+        assertTrue(gate.allow(0, holdMs = 700))
+        assertFalse(gate.allow(500))
+        assertTrue(gate.allow(700))
+    }
 }
