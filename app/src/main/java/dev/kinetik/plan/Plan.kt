@@ -4,6 +4,7 @@ import dev.kinetik.model.Exercise
 import dev.kinetik.model.ExerciseKind
 import dev.kinetik.model.OverrideScope
 import dev.kinetik.model.Workout
+import dev.kinetik.model.WorkoutType
 
 data class PlannedSet(
     val circuit: Int,
@@ -18,7 +19,7 @@ data class PlannedSet(
     val overridden: Boolean,
 )
 
-enum class RestKind { EXERCISE, CIRCUIT }
+enum class RestKind { SET, EXERCISE, CIRCUIT }
 
 sealed interface Step {
     data class Work(val set: PlannedSet) : Step
@@ -37,7 +38,28 @@ internal fun circuitExercises(w: Workout, circuit: Int): List<Pair<Exercise, Boo
     }
 }
 
-fun buildPlan(w: Workout): List<Step> {
+fun buildPlan(w: Workout): List<Step> = if (w.type == WorkoutType.REGULAR) buildRegular(w) else buildCircuit(w)
+
+/** Regular: block by block, all sets of each exercise in turn. Empty blocks are skipped. */
+private fun buildRegular(w: Workout): List<Step> {
+    val steps = mutableListOf<Step>()
+    w.blocks.filter { it.exercises.isNotEmpty() }.forEachIndexed { b, block ->
+        block.exercises.forEachIndexed { slot, e ->
+            val count = e.sets.coerceAtLeast(1)
+            val reps = if (e.kind == ExerciseKind.REPS) e.startReps else null
+            repeat(count) { r ->
+                steps += Step.Work(PlannedSet(b, slot, e.name, e.kind, reps, e.weightKg, e.maxBreakSec, r, count, false))
+                val lastSet = r == count - 1
+                val seconds = if (lastSet) w.restExerciseSec else w.setRestSec ?: e.restSec
+                if (seconds > 0) steps += Step.Rest(seconds, if (lastSet) RestKind.EXERCISE else RestKind.SET, b)
+            }
+        }
+    }
+    if (steps.lastOrNull() is Step.Rest) steps.removeAt(steps.lastIndex)
+    return steps
+}
+
+private fun buildCircuit(w: Workout): List<Step> {
     val steps = mutableListOf<Step>()
     for (c in 0 until w.circuits) {
         val list = circuitExercises(w, c)

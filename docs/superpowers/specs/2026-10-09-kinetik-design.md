@@ -188,3 +188,16 @@ Android Studio 2026.2 with its bundled JBR (Java 25), SDK platform `android-36`,
 - Home-screen widget (4×2, resizable down to 4×1, where the buttons move to the right): during a workout it shows circuit x/y, the exercise and reps (or the rest countdown), with Done or Pause/Skip. When idle it shows the up-next workout with Start, which opens the app and starts it.
 - Double-tap protection: button presses within 300 ms are ignored, and within 700 ms after DONE. START only starts once. Pause only applies during rests.
 - Settings no longer offers "Reset workouts".
+
+## 12. Regular workouts (2026-10-09)
+
+A workout is either **Circuit** (everything above) or **Regular**, chosen when it's created with **+** (fixed afterwards).
+
+- **Structure:** a list of named **blocks**; each block is a list of exercises run as **straight sets** (all sets of A, then all sets of B). Empty blocks are skipped.
+- **Exercise:** sets × reps (same reps every set), type (reps / max reps / max time), optional weight and max break, and its own **rest between sets** (default 1:30).
+- **Rests:** an optional workout-wide **rest between sets** that overrides every exercise's own (off by default), plus one **rest between exercises** (default 3:00). No rest after the final set.
+- **Editor:** two rule tiles (rest between exercises; rest between sets, all exercises — "Off" or a time), one card per block (rename inline; ⋮ to move or delete; drag exercises to reorder; + Add exercise), and + Add block. On the main screen the right pane shows the run order.
+- **Live:** the same screens with "Block x/y" instead of "Circuit x/y" and a "Set n of m" tag; voice says e.g. "Bench press, 8, set 2 of 4". Notification, widget and home cards use "Block" and "2 blocks · 5 exercises".
+- **Storage:** `Workout.type` (default CIRCUIT), `blocks`, `setRestSec`, and `Exercise.restSec` — all with defaults, so saved circuit workouts load unchanged.
+
+Widget text and buttons are slightly larger (full: 40 sp number, 52 dp buttons; 4×1: 28 sp number, 44 dp buttons).

@@ -158,7 +158,7 @@ private fun LiveMain(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: B
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Label(m.workoutName)
-                    Text("Circuit ${m.circuitNumber}/${m.circuits}", style = KText.mono(24.sp))
+                    Text("${m.section} ${m.circuitNumber}/${m.circuits}", style = KText.mono(24.sp))
                 }
                 Text("End", Modifier.clickable(onClick = onEnd).padding(8.dp), style = KText.body.copy(color = K.Muted))
             }
@@ -172,7 +172,7 @@ private fun LiveMain(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: B
             }
             Label("This circuit", Modifier.padding(top = 10.dp, bottom = 8.dp))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { m.queue.forEach { QueueRowView(it) } }
-            Label("Circuits", Modifier.padding(top = 20.dp, bottom = 8.dp))
+            Label("${m.section}s", Modifier.padding(top = 20.dp, bottom = 8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 repeat(m.circuits) { i ->
                     val (bg, fg, text) = when {
@@ -212,7 +212,7 @@ private fun LiveTabletop(m: LiveModel, send: (SessionEvent) -> Unit, onEnd: () -
         ) {
             RingBlock(m, Modifier.ringBox(300.dp), stroke = 16.dp, bigSize = 100.sp, nameSize = 20.sp)
             Column(Modifier.weight(1f)) {
-                Label("${m.workoutName} · Circuit ${m.circuitNumber}/${m.circuits} · ${m.sub}")
+                Label("${m.workoutName} · ${m.section} ${m.circuitNumber}/${m.circuits} · ${m.sub}")
                 if (m.nextName != null) {
                     Text("Next up", Modifier.padding(top = 10.dp), style = KText.display(40.sp))
                     Text("${m.nextReps} ${m.nextName}", style = KText.display(40.sp).copy(color = K.TealHi))
@@ -234,7 +234,7 @@ private fun LiveTabletop(m: LiveModel, send: (SessionEvent) -> Unit, onEnd: () -
 private fun LiveHeader(m: LiveModel, onEnd: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Column(Modifier.weight(1f)) {
-            Label("Circuit")
+            Label(m.section)
             Text("${m.circuitNumber}/${m.circuits}", style = KText.mono(24.sp))
         }
         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {

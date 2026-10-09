@@ -30,7 +30,7 @@ fun setLabel(p: PlannedSet): String = buildString {
 
 fun notificationText(s: SessionState): Pair<String, String> {
     if (s.phase == Phase.FINISHED) return s.workoutName to "Workout complete"
-    val title = "${s.workoutName} · Circuit ${s.circuit + 1}/${s.circuits}"
+    val title = "${s.workoutName} · ${s.section} ${s.circuit + 1}/${s.circuits}"
     val body = when (val step = s.step) {
         is Step.Work -> setLabel(step.set)
         is Step.Rest -> "Rest ${countdown(s.restRemainingMs)}" + (s.nextWork()?.let { " · next ${it.name}" } ?: "")

@@ -50,7 +50,7 @@ class LiveModelTest {
         val m = liveModel(neg)
         assertEquals("0:07", m.big)
         assertTrue(m.bigIsClock)
-        assertTrue("2 of 4" in m.tags)
+        assertTrue("Set 2 of 4" in m.tags)
         assertEquals("MAX·T", m.queue[0].reps)
     }
 

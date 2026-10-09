@@ -33,7 +33,10 @@ import dev.kinetik.ui.theme.KText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExerciseSheet(initial: Exercise, isNew: Boolean, onSave: (Exercise) -> Unit, onDelete: (() -> Unit)?, onDismiss: () -> Unit) {
+fun ExerciseSheet(
+    initial: Exercise, isNew: Boolean, onSave: (Exercise) -> Unit, onDelete: (() -> Unit)?, onDismiss: () -> Unit,
+    regular: Boolean = false, globalSetRestSec: Int? = null,
+) {
     var e by remember(initial.id) { mutableStateOf(initial) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = K.Card) {
         Column(
@@ -41,7 +44,7 @@ fun ExerciseSheet(initial: Exercise, isNew: Boolean, onSave: (Exercise) -> Unit,
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text(if (isNew) "New exercise" else "Edit exercise", style = KText.display(20.sp))
-            ExerciseFields(e) { e = it }
+            ExerciseFields(e, regular, globalSetRestSec) { e = it }
             SheetButtons(onDelete, onSave = { if (e.name.isNotBlank()) onSave(e.copy(name = e.name.trim())) })
         }
     }

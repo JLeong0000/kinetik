@@ -33,7 +33,7 @@ fun widgetModel(s: SessionState?, lib: Library): WidgetModel {
     }
     val m = liveModel(s)
     return WidgetModel(
-        headline = "${m.workoutName} · Circuit ${m.circuitNumber}/${m.circuits}",
+        headline = "${m.workoutName} · ${m.section} ${m.circuitNumber}/${m.circuits}",
         title = m.name,
         // A max-time stopwatch would redraw the widget every second; the rest countdown is worth it.
         big = if (m.bigIsClock && !m.isRest) "MAX" else m.big,

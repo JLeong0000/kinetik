@@ -14,7 +14,7 @@ fun KinetikTheme(content: @Composable () -> Unit) {
             primary = K.Teal, onPrimary = K.OnTeal, secondary = K.TealHi, tertiary = K.Rest,
             background = K.Bg, onBackground = K.Text, surface = K.Card, onSurface = K.Text,
             surfaceVariant = K.Card2, onSurfaceVariant = K.Muted, outline = K.Line,
-            surfaceContainerLow = K.Card, surfaceContainer = K.Card, surfaceContainerHigh = K.Card2,
+            surfaceContainerLow = K.Card, surfaceContainer = K.Card, surfaceContainerHigh = K.Card, surfaceContainerHighest = K.Card,
         ),
         typography = Typography(
             bodyLarge = KText.body.copy(fontSize = 16.sp),

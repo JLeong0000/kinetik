@@ -31,7 +31,7 @@ class CuesTest {
         val pull = buildPlan(Seed.pull())
         assertEquals("Dips, 13", announce((push[0] as Step.Work).set))
         assertEquals("Shrimp squats, 11", announce((legs[0] as Step.Work).set))
-        assertEquals("Pull up negatives, max time, 1 of 4", announce((pull[24] as Step.Work).set))
+        assertEquals("Pull up negatives, max time, set 1 of 4", announce((pull[24] as Step.Work).set))
         assertEquals("Dips, max", announce((push[32] as Step.Work).set))
     }
 

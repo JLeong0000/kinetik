@@ -1,6 +1,7 @@
 package dev.kinetik.session
 
 import dev.kinetik.model.Workout
+import dev.kinetik.model.WorkoutType
 import dev.kinetik.plan.ESTIMATED_SET_SEC
 import dev.kinetik.plan.PlannedSet
 import dev.kinetik.plan.Step
@@ -21,6 +22,8 @@ data class SessionState(
     val restRemainingMs: Long = restMs(steps.getOrNull(index)),
     val breakRemainingMs: Long? = null,
     val totalElapsedMs: Long = 0,
+    /** "Circuit" or "Block": what the numbered sections are called. */
+    val section: String = "Circuit",
 ) {
     val step: Step? get() = steps.getOrNull(index)
     val work: PlannedSet? get() = (step as? Step.Work)?.set
@@ -45,7 +48,11 @@ data class SessionState(
     }
 
     companion object {
-        fun start(w: Workout) = SessionState(w.id, w.name, w.circuits, buildPlan(w))
+        fun start(w: Workout) = if (w.type == WorkoutType.REGULAR) {
+            SessionState(w.id, w.name, w.blocks.count { it.exercises.isNotEmpty() }, buildPlan(w), section = "Block")
+        } else {
+            SessionState(w.id, w.name, w.circuits, buildPlan(w))
+        }
     }
 }
 

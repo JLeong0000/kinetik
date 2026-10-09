@@ -59,6 +59,12 @@ import dev.kinetik.model.Exercise
 import dev.kinetik.model.Group
 import dev.kinetik.model.Library
 import dev.kinetik.model.Workout
+import dev.kinetik.model.WorkoutType
+import dev.kinetik.model.newCircuitWorkout
+import dev.kinetik.model.newRegularWorkout
+import dev.kinetik.model.sections
+import dev.kinetik.model.summary
+import dev.kinetik.ui.components.RegularSummary
 import dev.kinetik.model.addGroup
 import dev.kinetik.model.addWorkout
 import dev.kinetik.model.deleteGroup
@@ -102,16 +108,22 @@ private class HomeActions(
         expanded.value = (expanded.value ?: expandedOnStart(store.library.value)) + id
     }
 
+    /** Set while the "Circuit or Regular?" choice is showing: the target group ("" = first group). */
+    val choosingFor = mutableStateOf<String?>(null)
+
     fun newWorkout(groupId: String?) {
+        choosingFor.value = groupId.orEmpty()
+    }
+
+    fun create(type: WorkoutType) {
+        val groupId = choosingFor.value?.ifEmpty { null }
+        choosingFor.value = null
         val gid = groupId ?: store.library.value.groups.firstOrNull()?.id ?: run {
             store.update { it.addGroup("Workouts") }
             expandNewest()
             store.library.value.groups.first().id
         }
-        val w = Workout(
-            name = "New workout", circuits = 4, repDrop = 1, restExerciseSec = 180, restCircuitSec = 240,
-            exercises = listOf(Exercise(name = "Exercise 1")),
-        )
+        val w = if (type == WorkoutType.REGULAR) newRegularWorkout() else newCircuitWorkout()
         store.update { it.addWorkout(gid, w) }
         onEdit(w.id)
     }
@@ -155,6 +167,22 @@ fun HomeScreen(mode: LayoutMode, onStart: (String) -> Unit, onEdit: (String) -> 
             HomeMain(lib, expanded, featured, { selectedId = it }, actions, onStart, onEdit, onSettings)
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).safeDrawingPadding())
+    }
+    if (actions.choosingFor.value != null) {
+        AlertDialog(
+            onDismissRequest = { actions.choosingFor.value = null },
+            title = { Text("New workout") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    BigButton("Circuit", { actions.create(WorkoutType.CIRCUIT) }, Modifier.fillMaxWidth(), primary = false, height = 56.dp, textSize = 16.sp)
+                    Text("Rounds of the same exercises, reps dropping each round.", style = KText.body.copy(color = K.Muted, fontSize = 12.sp))
+                    BigButton("Regular", { actions.create(WorkoutType.REGULAR) }, Modifier.fillMaxWidth(), primary = false, height = 56.dp, textSize = 16.sp)
+                    Text("Blocks of exercises, each with its own sets and rest.", style = KText.body.copy(color = K.Muted, fontSize = 12.sp))
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton({ actions.choosingFor.value = null }) { Text("Cancel") } },
+        )
     }
 }
 
@@ -325,7 +353,7 @@ private fun WorkoutCard(
             .padding(16.dp),
     ) {
         SegmentedRing(
-            w.circuits, active = if (big || selected) 0 else -1, done = 0,
+            w.sections, active = if (big || selected) 0 else -1, done = 0,
             modifier = Modifier.size(if (big) 66.dp else 40.dp).align(Alignment.TopEnd),
             stroke = if (big) 6.dp else 4.dp,
         )
@@ -333,7 +361,7 @@ private fun WorkoutCard(
             Column {
                 Tag(if (upNext) "Up next" else "Selected", accent = true)
                 Text(w.name, Modifier.padding(top = 10.dp), style = KText.display(40.sp).copy(letterSpacing = (-1).sp))
-                Text("${w.circuits} circuits · ${w.exercises.size} exercises · ~$minutes min", style = KText.body.copy(fontSize = 12.sp, color = K.Muted))
+                Text("${w.summary()} · ~$minutes min", style = KText.body.copy(fontSize = 12.sp, color = K.Muted))
                 Spacer(Modifier.size(16.dp))
                 Box(
                     Modifier.clip(KShape.Small).background(K.Teal).clickable { onStart?.invoke() }
@@ -344,7 +372,7 @@ private fun WorkoutCard(
             Column(Modifier.align(Alignment.BottomStart)) {
                 if (upNext && selected) Tag("Up next", accent = true)
                 Text(w.name, style = KText.display(22.sp))
-                Text("${w.circuits} circuits · ~$minutes min", style = KText.body.copy(fontSize = 12.sp, color = K.Muted))
+                Text("${w.summary().substringBefore(" ·")} · ~$minutes min", style = KText.body.copy(fontSize = 12.sp, color = K.Muted))
             }
         }
         DropdownMenu(menu, { menu = false }) {
@@ -387,14 +415,23 @@ private fun WorkoutDetail(w: Workout, onStart: (String) -> Unit, onEdit: (String
                 Label("Workout")
                 Text(w.name, style = KText.display(64.sp).copy(letterSpacing = (-2).sp))
             }
-            SegmentedRing(w.circuits, active = 0, done = 0, modifier = Modifier.size(96.dp), stroke = 9.dp)
+            SegmentedRing(w.sections, active = 0, done = 0, modifier = Modifier.size(96.dp), stroke = 9.dp)
         }
         Row(Modifier.padding(vertical = 18.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatTile("${w.circuits}", "circuits", Modifier.weight(1f))
-            StatTile("−${w.repDrop}", "reps / circuit", Modifier.weight(1f))
+            if (w.type == WorkoutType.REGULAR) {
+                StatTile("${w.sections}", "blocks", Modifier.weight(1f))
+                StatTile("${w.blocks.sumOf { it.exercises.size }}", "exercises", Modifier.weight(1f))
+            } else {
+                StatTile("${w.circuits}", "circuits", Modifier.weight(1f))
+                StatTile("−${w.repDrop}", "reps / circuit", Modifier.weight(1f))
+            }
             StatTile("~${minutes}m", "total", Modifier.weight(1f))
         }
-        PlanGridView(w, showLabels = true)
+        if (w.type == WorkoutType.REGULAR) {
+            RegularSummary(w, Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()))
+        } else {
+            PlanGridView(w, showLabels = true)
+        }
         Spacer(Modifier.weight(1f))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             BigButton("✎ Edit", { onEdit(w.id) }, Modifier.width(120.dp), primary = false, height = 64.dp, textSize = 15.sp)

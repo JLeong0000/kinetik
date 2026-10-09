@@ -31,7 +31,19 @@ fun Workout.upsertOverride(o: CircuitOverride): Workout {
 
 fun Workout.deleteOverride(id: String): Workout = copy(overrides = overrides.filterNot { it.id == id })
 
-fun Workout.validate(): List<String> = buildList {
+fun Workout.validate(): List<String> = if (type == WorkoutType.REGULAR) validateRegular() else validateCircuit()
+
+private fun Workout.validateRegular(): List<String> = buildList {
+    if (name.isBlank()) add("Name can't be empty")
+    val all = blocks.flatMap { it.exercises }
+    if (all.isEmpty()) add("Add at least one exercise")
+    if (blocks.any { it.name.isBlank() }) add("Every block needs a name")
+    if (all.any { it.name.isBlank() }) add("Every exercise needs a name")
+    if (all.any { it.kind == ExerciseKind.REPS && it.startReps < 1 }) add("Reps must be at least 1")
+    if (all.any { it.sets < 1 }) add("Sets must be at least 1")
+}
+
+private fun Workout.validateCircuit(): List<String> = buildList {
     if (name.isBlank()) add("Name can't be empty")
     if (circuits < 1) add("Needs at least 1 circuit")
     if (exercises.isEmpty()) add("Add at least one exercise")

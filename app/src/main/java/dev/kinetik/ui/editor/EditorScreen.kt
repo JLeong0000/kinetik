@@ -41,6 +41,15 @@ import dev.kinetik.model.Exercise
 import dev.kinetik.model.ExerciseKind
 import dev.kinetik.model.OverrideScope
 import dev.kinetik.model.Workout
+import dev.kinetik.model.WorkoutType
+import dev.kinetik.model.addBlock
+import dev.kinetik.model.deleteBlock
+import dev.kinetik.model.deleteBlockExercise
+import dev.kinetik.model.moveBlock
+import dev.kinetik.model.moveBlockExercise
+import dev.kinetik.model.renameBlock
+import dev.kinetik.model.upsertBlockExercise
+import dev.kinetik.ui.components.RegularSummary
 import dev.kinetik.model.deleteExercise
 import dev.kinetik.model.deleteOverride
 import dev.kinetik.model.moveExercise
@@ -75,6 +84,8 @@ fun EditorScreen(workoutId: String, mode: LayoutMode, onBack: () -> Unit) {
     }
     var draft by remember(workoutId) { mutableStateOf(saved) }
     var exerciseEdit by remember { mutableStateOf<Pair<Exercise, Boolean>?>(null) }
+    /** Regular workouts: (block id, exercise, isNew). */
+    var blockExerciseEdit by remember { mutableStateOf<Triple<String, Exercise, Boolean>?>(null) }
     var overrideEdit by remember { mutableStateOf<Pair<CircuitOverride, Boolean>?>(null) }
     var stepper by remember { mutableStateOf<StepperSpec?>(null) }
     var confirmDiscard by remember { mutableStateOf(false) }
@@ -106,7 +117,43 @@ fun EditorScreen(workoutId: String, mode: LayoutMode, onBack: () -> Unit) {
         }, onTap = { overrideEdit = it to false })
     }
 
-    if (mode == LayoutMode.COVER) {
+    val errorText: @Composable () -> Unit = {
+        errors.forEach { Text(it, Modifier.padding(top = 6.dp), style = KText.body.copy(color = K.Rest, fontSize = 13.sp)) }
+    }
+    val blocks: @Composable () -> Unit = {
+        RegularRuleTiles(draft, { stepper = it }) { draft = it }
+        draft.blocks.forEach { b ->
+            BlockCard(
+                draft, b,
+                onRename = { draft = draft.renameBlock(b.id, it) },
+                onMoveBlock = { draft = draft.moveBlock(b.id, it) },
+                onDeleteBlock = { draft = draft.deleteBlock(b.id) },
+                onMoveExercise = { f, t -> draft = draft.moveBlockExercise(b.id, f, t) },
+                onTapExercise = { blockExerciseEdit = Triple(b.id, it, false) },
+                onAddExercise = { blockExerciseEdit = Triple(b.id, Exercise(name = "", startReps = 10, sets = 3), true) },
+            )
+        }
+        AddBlockButton { draft = draft.addBlock() }
+        errorText()
+    }
+
+    if (draft.type == WorkoutType.REGULAR) {
+        if (mode == LayoutMode.COVER) {
+            Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp)) {
+                header(); blocks()
+            }
+        } else {
+            Row(Modifier.fillMaxSize().safeDrawingPadding()) {
+                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(18.dp, 18.dp)) {
+                    header(); blocks()
+                }
+                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(18.dp, 18.dp)) {
+                    Text("Run order", Modifier.padding(top = 8.dp, bottom = 10.dp), style = KText.display(20.sp))
+                    RegularSummary(draft)
+                }
+            }
+        }
+    } else if (mode == LayoutMode.COVER) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp)) {
             header(); rules(); list(); plan(false)
         }
@@ -128,6 +175,16 @@ fun EditorScreen(workoutId: String, mode: LayoutMode, onBack: () -> Unit) {
             onSave = { draft = draft.upsertExercise(it); exerciseEdit = null },
             onDelete = if (isNew || draft.exercises.size <= 1) null else ({ draft = draft.deleteExercise(index); exerciseEdit = null }),
             onDismiss = { exerciseEdit = null },
+        )
+    }
+    blockExerciseEdit?.let { (blockId, e, isNew) ->
+        ExerciseSheet(
+            e, isNew,
+            onSave = { draft = draft.upsertBlockExercise(blockId, it); blockExerciseEdit = null },
+            onDelete = if (isNew) null else ({ draft = draft.deleteBlockExercise(blockId, e.id); blockExerciseEdit = null }),
+            onDismiss = { blockExerciseEdit = null },
+            regular = true,
+            globalSetRestSec = draft.setRestSec,
         )
     }
     overrideEdit?.let { (o, isNew) ->

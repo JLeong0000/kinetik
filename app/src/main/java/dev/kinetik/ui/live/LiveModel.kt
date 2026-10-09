@@ -14,6 +14,8 @@ data class QueueRow(val reps: String, val name: String, val status: RowStatus, v
 
 data class LiveModel(
     val workoutName: String,
+    /** "Circuit" or "Block". */
+    val section: String,
     val circuitNumber: Int,
     val circuits: Int,
     val timeLeft: String,
@@ -67,6 +69,7 @@ fun liveModel(s: SessionState): LiveModel {
     val restStep = s.step as? Step.Rest
     return LiveModel(
         workoutName = s.workoutName,
+        section = s.section,
         circuitNumber = circuit + 1,
         circuits = s.circuits,
         timeLeft = countdown(s.timeLeftMs()),
@@ -84,7 +87,7 @@ fun liveModel(s: SessionState): LiveModel {
         sub = work?.let { "Ex ${slots.indexOf(it.slot) + 1} of ${slots.size}" } ?: "Rest",
         tags = buildList {
             work?.weightKg?.let { add(kg(it)) }
-            if (work != null && work.repeatCount > 1) add("${work.repeat + 1} of ${work.repeatCount}")
+            if (work != null && work.repeatCount > 1) add("Set ${work.repeat + 1} of ${work.repeatCount}")
         },
         beepZone = restStep != null && s.restRemainingMs <= 5_000,
         restFraction = restStep?.let { s.restRemainingMs / (it.seconds * 1000f) } ?: 0f,

@@ -36,6 +36,7 @@ import dev.kinetik.ui.components.Label
 import dev.kinetik.ui.theme.K
 import dev.kinetik.ui.theme.KShape
 import dev.kinetik.ui.theme.KText
+import dev.kinetik.session.countdown
 import dev.kinetik.ui.components.kFieldColors
 
 @Composable
@@ -54,12 +55,12 @@ fun <T> ChoiceRow(options: List<Pair<String, T>>, selected: T, onSelect: (T) -> 
 }
 
 @Composable
-fun StepperRow(label: String, value: Int, min: Int, max: Int, format: (Int) -> String = { "$it" }, onChange: (Int) -> Unit) {
+fun StepperRow(label: String, value: Int, min: Int, max: Int, format: (Int) -> String = { "$it" }, step: Int = 1, onChange: (Int) -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(label, Modifier.weight(1f), style = KText.body.copy(fontSize = 15.sp))
-        RoundButton("−") { onChange((value - 1).coerceAtLeast(min)) }
+        RoundButton("−") { onChange((value - step).coerceAtLeast(min)) }
         Text(format(value), Modifier.width(64.dp), style = KText.mono(18.sp).copy(color = K.TealHi), textAlign = TextAlign.Center)
-        RoundButton("+") { onChange((value + 1).coerceAtMost(max)) }
+        RoundButton("+") { onChange((value + step).coerceAtMost(max)) }
     }
 }
 
@@ -95,7 +96,7 @@ fun StepperDialog(spec: StepperSpec, onDismiss: () -> Unit) {
 
 /** Every editable field of one exercise. Used by the exercise sheet and the override sheet. */
 @Composable
-fun ExerciseFields(e: Exercise, onChange: (Exercise) -> Unit) {
+fun ExerciseFields(e: Exercise, regular: Boolean = false, globalSetRestSec: Int? = null, onChange: (Exercise) -> Unit) {
     var weightText by remember(e.id) { mutableStateOf(e.weightKg?.let { if (it % 1.0 == 0.0) "${it.toInt()}" else "$it" } ?: "") }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedTextField(e.name, { onChange(e.copy(name = it)) }, Modifier.fillMaxWidth(), label = { Text("Name") }, singleLine = true, colors = kFieldColors())
@@ -103,8 +104,17 @@ fun ExerciseFields(e: Exercise, onChange: (Exercise) -> Unit) {
         ChoiceRow(listOf("Reps" to ExerciseKind.REPS, "Max reps" to ExerciseKind.MAX_REPS, "Max time" to ExerciseKind.MAX_TIME), e.kind) {
             onChange(e.copy(kind = it, maxBreakSec = if (it == ExerciseKind.MAX_REPS) e.maxBreakSec else null))
         }
-        if (e.kind == ExerciseKind.REPS) StepperRow("Start reps", e.startReps, 1, 200) { onChange(e.copy(startReps = it)) }
-        StepperRow("Sets in a row", e.sets, 1, 10) { onChange(e.copy(sets = it)) }
+        if (e.kind == ExerciseKind.REPS) StepperRow(if (regular) "Reps" else "Start reps", e.startReps, 1, 200) { onChange(e.copy(startReps = it)) }
+        if (regular) {
+            StepperRow("Sets", e.sets, 1, 20) { onChange(e.copy(sets = it)) }
+            if (globalSetRestSec == null) {
+                StepperRow("Rest between sets", e.restSec, 0, 900, format = { countdown(it * 1000L) }, step = 15) { onChange(e.copy(restSec = it)) }
+            } else {
+                Text("Rest between sets: ${countdown(globalSetRestSec * 1000L)} (workout-wide)", style = KText.body.copy(color = K.Muted, fontSize = 13.sp))
+            }
+        } else {
+            StepperRow("Sets in a row", e.sets, 1, 10) { onChange(e.copy(sets = it)) }
+        }
         if (e.kind == ExerciseKind.MAX_REPS) {
             Label("Max break")
             ChoiceRow(listOf("Off" to null, "5s" to 5, "10s" to 10, "15s" to 15, "30s" to 30), e.maxBreakSec) {

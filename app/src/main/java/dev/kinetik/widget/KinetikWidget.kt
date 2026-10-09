@@ -87,16 +87,16 @@ private fun WidgetContent(m: WidgetModel) {
         GlanceModifier.fillMaxSize().cornerRadius(26.dp).background(color(K.Card)).padding(16.dp)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
-        Text(m.headline.uppercase(), style = TextStyle(color = color(K.Muted), fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+        Text(m.headline.uppercase(), style = TextStyle(color = color(K.Muted), fontSize = 12.sp, fontWeight = FontWeight.Bold), maxLines = 1)
         Spacer(GlanceModifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (m.big.isNotEmpty()) {
-                Text(m.big, style = TextStyle(color = color(if (m.isRest) K.Rest else K.TealHi), fontSize = 34.sp, fontWeight = FontWeight.Bold))
+                Text(m.big, style = TextStyle(color = color(if (m.isRest) K.Rest else K.TealHi), fontSize = 40.sp, fontWeight = FontWeight.Bold))
                 Spacer(GlanceModifier.width(12.dp))
             }
             Column {
-                Text(m.title, style = TextStyle(color = color(K.Text), fontSize = 18.sp, fontWeight = FontWeight.Bold), maxLines = 1)
-                if (m.sub.isNotEmpty()) Text(m.sub, style = TextStyle(color = color(K.Muted), fontSize = 12.sp), maxLines = 1)
+                Text(m.title, style = TextStyle(color = color(K.Text), fontSize = 20.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+                if (m.sub.isNotEmpty()) Text(m.sub, style = TextStyle(color = color(K.Muted), fontSize = 14.sp), maxLines = 1)
             }
         }
         Spacer(GlanceModifier.defaultWeight())
@@ -120,16 +120,16 @@ private fun CompactContent(m: WidgetModel) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (m.big.isNotEmpty()) {
-            Text(m.big, style = TextStyle(color = color(if (m.isRest) K.Rest else K.TealHi), fontSize = 24.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+            Text(m.big, style = TextStyle(color = color(if (m.isRest) K.Rest else K.TealHi), fontSize = 28.sp, fontWeight = FontWeight.Bold), maxLines = 1)
             Spacer(GlanceModifier.width(10.dp))
         }
         Column(GlanceModifier.defaultWeight()) {
-            Text(m.title, style = TextStyle(color = color(K.Text), fontSize = 14.sp, fontWeight = FontWeight.Bold), maxLines = 1)
-            Text(detail, style = TextStyle(color = color(K.Muted), fontSize = 11.sp), maxLines = 1)
+            Text(m.title, style = TextStyle(color = color(K.Text), fontSize = 16.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+            Text(detail, style = TextStyle(color = color(K.Muted), fontSize = 12.sp), maxLines = 1)
         }
         buttons(m).forEach { (label, primary, action) ->
             Spacer(GlanceModifier.width(6.dp))
-            WidgetButton(label, primary, GlanceModifier.width(if (primary) 70.dp else 60.dp), action, height = 36.dp, textSize = 13)
+            WidgetButton(label, primary, GlanceModifier.width(if (primary) 80.dp else 68.dp), action, height = 44.dp, textSize = 15)
         }
     }
 }
@@ -150,7 +150,7 @@ private fun buttons(m: WidgetModel): List<WidgetAction> {
 }
 
 @Composable
-private fun WidgetButton(label: String, primary: Boolean, modifier: GlanceModifier, action: Action, height: androidx.compose.ui.unit.Dp = 44.dp, textSize: Int = 14) {
+private fun WidgetButton(label: String, primary: Boolean, modifier: GlanceModifier, action: Action, height: androidx.compose.ui.unit.Dp = 52.dp, textSize: Int = 16) {
     Box(
         modifier.height(height).cornerRadius(12.dp).background(color(if (primary) K.Teal else K.Card2)).clickable(action),
         contentAlignment = Alignment.Center,
