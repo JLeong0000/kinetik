@@ -104,7 +104,7 @@ When the phone is half-folded with a horizontal hinge, Live switches to a two-pa
 
 ### 4.4 Settings
 
-Voice on/off, beep volume, keep screen on during workouts (default on), and reset to the seed workouts.
+Voice on/off, beep volume, keep screen on during workouts (default on).
 
 ## 5. Architecture
 
@@ -182,8 +182,9 @@ Android Studio 2026.2 with its bundled JBR (Java 25), SDK platform `android-36`,
 
 - The "each side" option is removed.
 - All buttons are rectangles with rounded corners (no pills or circles). Text-field labels and placeholders are grey.
-- No glow on the exercise ring or the rest countdown ring. The rings are true circles (measured 843 × 845 px on a 1080 px screen).
+- No glow on the exercise ring or the rest countdown ring. Rings are always circles: their size is the smaller of their maximum and the space available (measured 906 × 902 px on the Fold8 Ultra cover screen).
 - Earbud play/pause is **not** handled by Kinetik; it stays with the music app.
 - The workout notification is a media-style card with Done / Pause / Resume / Skip, visible on the lock screen.
-- Home-screen widget (4×2, resizable): during a workout it shows circuit x/y, the exercise and reps (or the rest countdown), with Done or Pause/Skip. When idle it shows the up-next workout with Start, which opens the app and starts it.
+- Home-screen widget (4×2, resizable down to 4×1, where the buttons move to the right): during a workout it shows circuit x/y, the exercise and reps (or the rest countdown), with Done or Pause/Skip. When idle it shows the up-next workout with Start, which opens the app and starts it.
 - Double-tap protection: button presses within 300 ms are ignored, and within 700 ms after DONE. START only starts once. Pause only applies during rests.
+- Settings no longer offers "Reset workouts".
