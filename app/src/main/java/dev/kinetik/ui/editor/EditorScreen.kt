@@ -60,6 +60,7 @@ import dev.kinetik.ui.components.ReorderableColumn
 import dev.kinetik.ui.components.StatTile
 import dev.kinetik.ui.components.Tag
 import dev.kinetik.ui.theme.K
+import dev.kinetik.ui.theme.KShape
 import dev.kinetik.ui.theme.KText
 
 private val RowH = 64.dp
@@ -158,7 +159,7 @@ private fun EditorHeader(w: Workout, canSave: Boolean, onName: (String) -> Unit,
         )
         Text(
             "Save",
-            Modifier.clip(CircleShape).background(if (canSave) K.Teal.copy(alpha = 0.14f) else K.Card2)
+            Modifier.clip(KShape.Small).background(if (canSave) K.Teal.copy(alpha = 0.14f) else K.Card2)
                 .clickable(enabled = canSave, onClick = onSave).padding(horizontal = 12.dp, vertical = 6.dp),
             style = KText.body.copy(color = if (canSave) K.TealHi else K.Muted, fontSize = 13.sp),
         )
@@ -189,7 +190,7 @@ private fun ExerciseList(w: Workout, onMove: (Int, Int) -> Unit, onTap: (Exercis
     }
     Text(
         "+ Add exercise",
-        Modifier.padding(top = 12.dp).clip(CircleShape).background(K.Card2).clickable(onClick = onAdd).padding(horizontal = 14.dp, vertical = 10.dp),
+        Modifier.padding(top = 12.dp).clip(KShape.Small).background(K.Card2).clickable(onClick = onAdd).padding(horizontal = 14.dp, vertical = 10.dp),
         style = KText.body.copy(color = K.Muted, fontSize = 13.sp),
     )
 }

@@ -28,7 +28,6 @@ fun SegmentedRing(segments: Int, active: Int, done: Int, modifier: Modifier, str
         for (i in 0 until n) {
             val start = -90f + i * span + gapDeg
             val sweep = (span - gapDeg * 2).coerceAtLeast(1f)
-            if (i == active) ring(K.Teal.copy(alpha = 0.22f), start, sweep, w * 1.6f, inset = w)
             val color = when {
                 i == active -> K.Teal
                 i < done -> K.TealDim
@@ -47,7 +46,6 @@ fun RestRing(fraction: Float, modifier: Modifier, stroke: Dp) {
         ring(K.Track, 0f, 360f, w)
         val sweep = 360f * fraction.coerceIn(0f, 1f)
         if (sweep > 0f) {
-            ring(K.Rest.copy(alpha = 0.22f), -90f, sweep, w * 1.6f, inset = w)
             ring(K.Rest, -90f, sweep, w)
         }
     }

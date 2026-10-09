@@ -82,7 +82,9 @@ import dev.kinetik.ui.components.StatTile
 import dev.kinetik.ui.components.Tag
 import dev.kinetik.ui.components.cssGradientEndpoints
 import dev.kinetik.ui.theme.K
+import dev.kinetik.ui.theme.KShape
 import dev.kinetik.ui.theme.KText
+import dev.kinetik.ui.components.kFieldColors
 
 private class HomeActions(private val store: WorkoutStore, private val onEdit: (String) -> Unit) {
     fun newWorkout(groupId: String?) {
@@ -208,7 +210,7 @@ private fun HomeHeader(onAdd: () -> Unit, onSettings: (() -> Unit)?) {
         if (onSettings != null) {
             Text("Settings", Modifier.padding(end = 14.dp).clickable(onClick = onSettings), style = KText.body.copy(color = K.Muted))
         }
-        Box(Modifier.size(44.dp).clip(CircleShape).background(K.Card).clickable(onClick = onAdd), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(44.dp).clip(KShape.Small).background(K.Card).clickable(onClick = onAdd), contentAlignment = Alignment.Center) {
             Text("+", style = KText.body.copy(fontSize = 22.sp))
         }
     }
@@ -307,7 +309,7 @@ private fun WorkoutCard(
                 Text("${w.circuits} circuits · ${w.exercises.size} exercises · ~$minutes min", style = KText.body.copy(fontSize = 12.sp, color = K.Muted))
                 Spacer(Modifier.size(16.dp))
                 Box(
-                    Modifier.clip(CircleShape).background(K.Teal).clickable { onStart?.invoke() }
+                    Modifier.clip(KShape.Small).background(K.Teal).clickable { onStart?.invoke() }
                         .testTag("start").padding(horizontal = 22.dp, vertical = 12.dp),
                 ) { Text("▶ Start", style = KText.body.copy(color = K.OnTeal, fontSize = 15.sp)) }
             }
@@ -380,7 +382,7 @@ internal fun TextDialog(title: String, initial: String, onDismiss: () -> Unit, o
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
-        text = { OutlinedTextField(text, { text = it }, singleLine = true) },
+        text = { OutlinedTextField(text, { text = it }, singleLine = true, colors = kFieldColors()) },
         confirmButton = {
             TextButton({ if (text.isNotBlank()) { onConfirm(text.trim()); onDismiss() } }) { Text("Save") }
         },

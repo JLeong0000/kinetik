@@ -39,11 +39,19 @@ fun notificationText(s: SessionState): Pair<String, String> {
     return title to if (s.phase == Phase.PAUSED) "Paused · $body" else body
 }
 
-/** What the headphone play/pause button does: finish the set, or pause/resume a rest. */
-fun primaryEvent(s: SessionState): SessionEvent? = when {
-    s.phase == Phase.FINISHED -> null
-    s.step is Step.Work -> SessionEvent.Done
-    else -> SessionEvent.TogglePause
+/** Buttons on the lock-screen card. Earbud play/pause is left to the music app. */
+enum class Control(val label: String, val event: SessionEvent) {
+    DONE("Done", SessionEvent.Done),
+    PAUSE("Pause", SessionEvent.TogglePause),
+    RESUME("Resume", SessionEvent.TogglePause),
+    SKIP("Skip", SessionEvent.Skip),
+}
+
+fun controlsFor(s: SessionState): List<Control> = when {
+    s.phase == Phase.FINISHED -> emptyList()
+    s.step is Step.Work -> listOf(Control.DONE)
+    s.phase == Phase.PAUSED -> listOf(Control.RESUME, Control.SKIP)
+    else -> listOf(Control.PAUSE, Control.SKIP)
 }
 
 /** The foreground service (notification, wake lock, media button) runs only while a workout is in progress. */

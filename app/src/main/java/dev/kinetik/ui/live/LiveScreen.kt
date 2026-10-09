@@ -312,9 +312,9 @@ private fun WorkControls(m: LiveModel, send: (SessionEvent) -> Unit, height: Dp)
 @Composable
 private fun RestControls(m: LiveModel, send: (SessionEvent) -> Unit, height: Dp) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        BigButton("−30s", { send(SessionEvent.MinusThirty) }, Modifier.weight(1f), primary = false, height = height, textSize = 15.sp)
-        BigButton(if (m.paused) "▶ Resume" else "❚❚ Pause", { send(SessionEvent.TogglePause) }, Modifier.weight(1f), primary = false, height = height, textSize = 15.sp)
-        BigButton("Skip ›", { send(SessionEvent.Skip) }, Modifier.weight(1f), primary = false, height = height, textSize = 15.sp)
+        BigButton("−30s", { send(SessionEvent.MinusThirty) }, Modifier.weight(1f), primary = false, height = height, textSize = 13.sp)
+        BigButton(if (m.paused) "▶ Resume" else "❚❚ Pause", { send(SessionEvent.TogglePause) }, Modifier.weight(1.3f), primary = false, height = height, textSize = 13.sp)
+        BigButton("Skip ›", { send(SessionEvent.Skip) }, Modifier.weight(1f), primary = false, height = height, textSize = 13.sp)
     }
 }
 

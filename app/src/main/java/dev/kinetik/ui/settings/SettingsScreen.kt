@@ -66,7 +66,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                 onValueChangeFinished = { set { it.copy(beepVolume = (volume * 100).roundToInt()) } },
                 colors = SliderDefaults.colors(thumbColor = K.Teal, activeTrackColor = K.Teal, inactiveTrackColor = K.Card2),
             )
-            TextButton({ app.cues.play(listOf(Cue.ShortBeep, Cue.LongBeep)) }) { Text("Test beep") }
+            BigButton("Test beep", { app.cues.play(listOf(Cue.ShortBeep, Cue.LongBeep)) }, Modifier.padding(top = 8.dp), primary = false, height = 48.dp, textSize = 14.sp)
         }
         SettingCard { SwitchRow("Keep screen on during workouts", s.keepScreenOn) { v -> set { it.copy(keepScreenOn = v) } } }
         SettingCard {

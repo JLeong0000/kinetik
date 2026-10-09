@@ -34,7 +34,9 @@ import dev.kinetik.model.Exercise
 import dev.kinetik.model.ExerciseKind
 import dev.kinetik.ui.components.Label
 import dev.kinetik.ui.theme.K
+import dev.kinetik.ui.theme.KShape
 import dev.kinetik.ui.theme.KText
+import dev.kinetik.ui.components.kFieldColors
 
 @Composable
 fun <T> ChoiceRow(options: List<Pair<String, T>>, selected: T, onSelect: (T) -> Unit) {
@@ -43,7 +45,7 @@ fun <T> ChoiceRow(options: List<Pair<String, T>>, selected: T, onSelect: (T) -> 
             val on = value == selected
             Text(
                 label,
-                Modifier.clip(CircleShape).background(if (on) K.Teal else K.Card2).clickable { onSelect(value) }
+                Modifier.clip(KShape.Small).background(if (on) K.Teal else K.Card2).clickable { onSelect(value) }
                     .padding(horizontal = 14.dp, vertical = 9.dp),
                 style = KText.body.copy(color = if (on) K.OnTeal else K.Text),
             )
@@ -63,7 +65,7 @@ fun StepperRow(label: String, value: Int, min: Int, max: Int, format: (Int) -> S
 
 @Composable
 private fun RoundButton(text: String, onClick: () -> Unit) {
-    Box(Modifier.size(40.dp).clip(CircleShape).background(K.Card2).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(40.dp).clip(KShape.Small).background(K.Card2).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
         Text(text, style = KText.body.copy(fontSize = 20.sp))
     }
 }
@@ -96,7 +98,7 @@ fun StepperDialog(spec: StepperSpec, onDismiss: () -> Unit) {
 fun ExerciseFields(e: Exercise, onChange: (Exercise) -> Unit) {
     var weightText by remember(e.id) { mutableStateOf(e.weightKg?.let { if (it % 1.0 == 0.0) "${it.toInt()}" else "$it" } ?: "") }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(e.name, { onChange(e.copy(name = it)) }, Modifier.fillMaxWidth(), label = { Text("Name") }, singleLine = true)
+        OutlinedTextField(e.name, { onChange(e.copy(name = it)) }, Modifier.fillMaxWidth(), label = { Text("Name") }, singleLine = true, colors = kFieldColors())
         Label("Type")
         ChoiceRow(listOf("Reps" to ExerciseKind.REPS, "Max reps" to ExerciseKind.MAX_REPS, "Max time" to ExerciseKind.MAX_TIME), e.kind) {
             onChange(e.copy(kind = it, maxBreakSec = if (it == ExerciseKind.MAX_REPS) e.maxBreakSec else null))
@@ -114,6 +116,7 @@ fun ExerciseFields(e: Exercise, onChange: (Exercise) -> Unit) {
             { weightText = it; onChange(e.copy(weightKg = it.toDoubleOrNull())) },
             Modifier.fillMaxWidth(),
             label = { Text("Weight (kg, optional)") },
+            colors = kFieldColors(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         )

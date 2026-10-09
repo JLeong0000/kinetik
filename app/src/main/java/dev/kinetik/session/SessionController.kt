@@ -56,10 +56,6 @@ class SessionController(
         if (next != prev) apply(prev, e, next)
     }
 
-    fun primaryAction() {
-        _state.value?.let(::primaryEvent)?.let(::send)
-    }
-
     fun stop() {
         loop?.cancel()
         _state.value = null

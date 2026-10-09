@@ -31,7 +31,10 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.kinetik.ui.theme.K
+import dev.kinetik.ui.theme.KShape
 import dev.kinetik.ui.theme.KText
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 
 @Composable
 fun Label(text: String, modifier: Modifier = Modifier, color: Color = K.Muted) =
@@ -41,7 +44,7 @@ fun Label(text: String, modifier: Modifier = Modifier, color: Color = K.Muted) =
 fun Tag(text: String, accent: Boolean = false, modifier: Modifier = Modifier) = Text(
     text,
     modifier
-        .background(if (accent) K.Teal.copy(alpha = 0.14f) else K.Card2, CircleShape)
+        .background(if (accent) K.Teal.copy(alpha = 0.14f) else K.Card2, KShape.Chip)
         .padding(horizontal = 9.dp, vertical = 4.dp),
     style = KText.body.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (accent) K.TealHi else K.Muted),
 )
@@ -73,12 +76,17 @@ fun BigButton(
     Box(
         modifier
             .height(height)
-            .clip(RoundedCornerShape(30.dp))
+            .clip(KShape.Big)
             .background(if (primary) K.Teal else K.Card2)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = KText.display(textSize, 900).copy(color = if (primary) K.OnTeal else K.Text, letterSpacing = 1.sp))
+        Text(
+            text,
+            Modifier.padding(horizontal = 12.dp),
+            style = KText.display(textSize, 900).copy(color = if (primary) K.OnTeal else K.Text, letterSpacing = 1.sp),
+            maxLines = 1,
+        )
     }
 }
 
@@ -139,3 +147,15 @@ fun Modifier.verticalText(): Modifier = layout { measurable, constraints ->
     )
     layout(p.height, p.width) { p.place((p.height - p.width) / 2, (p.width - p.height) / 2) }
 }.graphicsLayer { rotationZ = -90f }
+
+/** Text fields with grey labels and placeholders, teal when focused. */
+@Composable
+fun kFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = K.Teal,
+    unfocusedBorderColor = K.Line,
+    focusedLabelColor = K.TealHi,
+    unfocusedLabelColor = K.Muted,
+    focusedPlaceholderColor = K.Muted,
+    unfocusedPlaceholderColor = K.Muted,
+    cursorColor = K.Teal,
+)

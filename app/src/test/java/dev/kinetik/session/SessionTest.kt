@@ -124,10 +124,15 @@ class SessionTest {
         assertEquals(180_000L + 45_000, s.after(SessionEvent.Done).timeLeftMs())
     }
 
-    @Test fun headphoneButtonIsDoneInASetAndPauseInARest() {
+    // Lock-screen card: the buttons shown for each state (earbuds are left to the music app).
+    @Test fun controlsForEachState() {
         val s = SessionState.start(two)
-        assertEquals(SessionEvent.Done, primaryEvent(s))
-        assertEquals(SessionEvent.TogglePause, primaryEvent(s.after(SessionEvent.Done)))
+        assertEquals(listOf(Control.DONE), controlsFor(s))
+        val rest = s.after(SessionEvent.Done)
+        assertEquals(listOf(Control.PAUSE, Control.SKIP), controlsFor(rest))
+        assertEquals(listOf(Control.RESUME, Control.SKIP), controlsFor(rest.after(SessionEvent.Tick(800), SessionEvent.TogglePause)))
+        assertEquals(emptyList<Control>(), controlsFor(rest.after(SessionEvent.Skip, SessionEvent.Done)))
+        assertEquals(SessionEvent.TogglePause, Control.RESUME.event)
     }
 
     @Test fun formats() {
