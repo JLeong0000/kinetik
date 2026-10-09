@@ -1,6 +1,7 @@
 package dev.kinetik.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -20,6 +21,13 @@ fun KinetikNav(mode: LayoutMode) {
     val nav = rememberNavController()
     val session by app.session.state.collectAsStateWithLifecycle()
     val start = remember { if (session != null) "live" else "home" }
+
+    // A workout started from outside the app (the widget) jumps straight to the live screen.
+    LaunchedEffect(session != null) {
+        if (session != null && nav.currentDestination?.route != "live") {
+            nav.navigate("live") { launchSingleTop = true }
+        }
+    }
 
     NavHost(nav, startDestination = start) {
         composable("home") {

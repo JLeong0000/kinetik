@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.window)
     implementation(libs.media)
+    implementation(libs.glance.appwidget)
     implementation(libs.serialization.json)
     implementation(libs.coroutines.android)
     debugImplementation(libs.compose.ui.tooling)

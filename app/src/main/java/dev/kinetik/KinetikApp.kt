@@ -5,7 +5,12 @@ import android.content.Context
 import dev.kinetik.cues.CuePlayer
 import dev.kinetik.session.SessionController
 import dev.kinetik.store.WorkoutStore
+import dev.kinetik.widget.KinetikWidget
+import dev.kinetik.widget.widgetModel
+import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 class KinetikApp : Application() {
@@ -27,6 +32,12 @@ class KinetikApp : Application() {
                 cues.voiceOn = it.settings.voiceOn
                 cues.beepVolume = it.settings.beepVolume
             }
+        }
+        // Redraw home-screen widgets only when what they show changes (about once a second during a rest).
+        scope.launch {
+            combine(session.state, store.library, ::widgetModel)
+                .distinctUntilChanged()
+                .collect { KinetikWidget().updateAll(this@KinetikApp) }
         }
     }
 }

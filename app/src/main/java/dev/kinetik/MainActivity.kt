@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
                 .launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+        startFromIntent(intent)
         setContent {
             KinetikTheme {
                 val foldFlow = remember { WindowInfoTracker.getOrCreate(this).windowLayoutInfo(this).map { it.toFold() } }
@@ -48,5 +49,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        startFromIntent(intent)
+    }
+
+    /** The widget's Start button opens the app with the workout to start. */
+    private fun startFromIntent(intent: android.content.Intent?) {
+        val id = intent?.getStringExtra(EXTRA_START) ?: return
+        intent.removeExtra(EXTRA_START)
+        app.session.start(id)
+    }
+
+    companion object {
+        const val EXTRA_START = "dev.kinetik.START_WORKOUT"
     }
 }
