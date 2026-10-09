@@ -23,6 +23,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -275,8 +277,12 @@ private fun GroupHeader(g: Group, lib: Library, open: Boolean, actions: HomeActi
         Modifier.fillMaxWidth().clip(KShape.Small).clickable(onClick = onToggle).padding(6.dp, 8.dp, 6.dp, 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(if (open) "▾" else "▸", Modifier.padding(end = 8.dp), style = KText.body.copy(color = K.Muted))
-        Label(g.name + if (open) "" else " · ${g.workouts.size}", Modifier.weight(1f))
+        Text(if (open) "▾" else "▸", Modifier.padding(end = 8.dp), style = KText.body.copy(color = K.Muted, fontSize = 16.sp))
+        Text(
+            (g.name + if (open) "" else " · ${g.workouts.size}").uppercase(),
+            Modifier.weight(1f),
+            style = KText.label.copy(fontSize = 13.sp, letterSpacing = 0.9.sp),
+        )
         Box {
             Text("⋮", Modifier.clickable { menu = true }.padding(horizontal = 8.dp), style = KText.body.copy(color = K.Muted))
             DropdownMenu(menu, { menu = false }) {
@@ -360,7 +366,14 @@ private fun WorkoutCard(
         if (big) {
             Column {
                 Tag(if (upNext) "Up next" else "Selected", accent = true)
-                Text(w.name, Modifier.padding(top = 10.dp), style = KText.display(40.sp).copy(letterSpacing = (-1).sp))
+                // Stays clear of the ring icon in the corner; long names shrink rather than run into it.
+                BasicText(
+                    w.name,
+                    Modifier.padding(top = 10.dp, end = 76.dp),
+                    style = KText.display(40.sp).copy(letterSpacing = (-1).sp),
+                    maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(minFontSize = 22.sp, maxFontSize = 40.sp, stepSize = 1.sp),
+                )
                 Text("${w.summary()} · ~$minutes min", style = KText.body.copy(fontSize = 12.sp, color = K.Muted))
                 Spacer(Modifier.size(16.dp))
                 Box(

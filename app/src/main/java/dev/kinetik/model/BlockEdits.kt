@@ -41,9 +41,11 @@ fun Workout.moveBlockExercise(blockId: String, from: Int, to: Int): Workout =
 val Workout.sections: Int
     get() = if (type == WorkoutType.REGULAR) blocks.count { it.exercises.isNotEmpty() } else circuits
 
-/** e.g. "5 circuits · 4 exercises" or "2 blocks · 5 exercises". */
+private fun count(n: Int, word: String) = if (n == 1) "1 $word" else "$n ${word}s"
+
+/** e.g. "5 circuits · 4 exercises" or "1 block · 1 exercise". */
 fun Workout.summary(): String = if (type == WorkoutType.REGULAR) {
-    "$sections blocks · ${blocks.sumOf { it.exercises.size }} exercises"
+    "${count(sections, "block")} · ${count(blocks.sumOf { it.exercises.size }, "exercise")}"
 } else {
-    "$circuits circuits · ${exercises.size} exercises"
+    "${count(circuits, "circuit")} · ${count(exercises.size, "exercise")}"
 }

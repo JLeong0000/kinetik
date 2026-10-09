@@ -14,6 +14,7 @@ import dev.kinetik.model.moveBlockExercise
 import dev.kinetik.model.newRegularWorkout
 import dev.kinetik.model.renameBlock
 import dev.kinetik.model.upsertBlockExercise
+import dev.kinetik.model.summary
 import dev.kinetik.model.validate
 import dev.kinetik.session.SessionState
 import dev.kinetik.session.notificationText
@@ -104,5 +105,11 @@ class RegularTest {
         assertEquals(listOf("Bench press", "Dips"), w.blocks[0].exercises.map { it.name })
         w = w.deleteBlock(w.blocks.last().id)
         assertEquals(3, w.blocks.size)
+    }
+
+    @Test fun summaryUsesSingularForOne() {
+        assertEquals("1 block · 1 exercise", newRegularWorkout().summary())
+        assertEquals("2 blocks · 3 exercises", pushDay.summary())
+        assertEquals("5 circuits · 4 exercises", dev.kinetik.model.Seed.pull().summary())
     }
 }

@@ -8,6 +8,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -249,35 +253,52 @@ private fun LiveHeader(m: LiveModel, onEnd: () -> Unit) {
 }
 
 @Composable
-private fun RingBlock(m: LiveModel, modifier: Modifier, stroke: Dp, bigSize: TextUnit, nameSize: TextUnit) {
+internal fun RingBlock(m: LiveModel, modifier: Modifier, stroke: Dp, bigSize: TextUnit, nameSize: TextUnit) {
     val pulse = rememberPulse(m.beepZone, m.big)
-    Box(modifier, contentAlignment = Alignment.Center) {
+    BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
         if (m.isRest) RestRing(m.restFraction, Modifier.fillMaxSize(), stroke)
         else SegmentedRing(m.segments, m.activeSegment, m.activeSegment, Modifier.fillMaxSize(), stroke, gapDeg = 5f)
-        Column(Modifier.widthIn(max = 250.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        // Largest square inside the ring's inner edge (side = inner diameter / √2), so text never reaches the ring.
+        val inside = (minOf(maxWidth, maxHeight) - stroke * 4) * 0.707f
+        Column(
+            Modifier.size(inside),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
             Label(if (m.paused) "Paused" else m.sub, color = if (m.isRest) K.Rest else K.Muted)
             if (m.bigIsClock) {
-                Text(
+                FitText(
                     m.big,
-                    Modifier.graphicsLayer { scaleX = pulse; scaleY = pulse },
-                    style = KText.mono(if (m.isRest) 76.sp else 64.sp).copy(color = if (m.beepZone) K.Rest else K.Text, letterSpacing = (-2).sp),
+                    Modifier.weight(1f).graphicsLayer { scaleX = pulse; scaleY = pulse },
+                    KText.mono(if (m.isRest) 76.sp else 64.sp).copy(color = if (m.beepZone) K.Rest else K.Text, letterSpacing = (-2).sp),
                 )
             } else {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        m.big,
-                        style = KText.display(if (m.bigIsWord) bigSize * 0.5f else bigSize, 900)
-                            .copy(color = K.TealHi, shadow = Shadow(K.Teal.copy(alpha = 0.5f), blurRadius = 34f)),
-                        maxLines = 1,
-                    )
-                }
+                FitText(
+                    m.big,
+                    Modifier.weight(1.2f),
+                    KText.display(if (m.bigIsWord) bigSize * 0.5f else bigSize, 900)
+                        .copy(color = K.TealHi, shadow = Shadow(K.Teal.copy(alpha = 0.5f), blurRadius = 34f)),
+                )
             }
             if (!m.isRest) {
-                Text(m.name, style = KText.display(nameSize), textAlign = TextAlign.Center, maxLines = 2)
-                if (m.tags.isNotEmpty()) Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) { m.tags.forEach { Tag(it) } }
-                m.breakLeft?.let { Text("Break $it", Modifier.padding(top = 6.dp), style = KText.mono(20.sp).copy(color = K.Rest)) }
+                FitText(m.name, Modifier.weight(0.8f), KText.display(nameSize), maxLines = 2)
+                if (m.tags.isNotEmpty()) Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) { m.tags.forEach { Tag(it) } }
+                m.breakLeft?.let { Text("Break $it", Modifier.padding(top = 4.dp), style = KText.mono(18.sp).copy(color = K.Rest)) }
             }
         }
+    }
+}
+
+/** Centred text that shrinks (down to 10 sp) until it fits its box. */
+@Composable
+private fun FitText(text: String, modifier: Modifier, style: TextStyle, maxLines: Int = 1) {
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        BasicText(
+            text,
+            style = style.copy(textAlign = TextAlign.Center),
+            maxLines = maxLines,
+            autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = style.fontSize, stepSize = 1.sp),
+        )
     }
 }
 
