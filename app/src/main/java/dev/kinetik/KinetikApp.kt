@@ -9,6 +9,7 @@ import dev.kinetik.widget.KinetikWidget
 import dev.kinetik.widget.widgetModel
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -20,6 +21,9 @@ class KinetikApp : Application() {
         private set
     lateinit var session: SessionController
         private set
+
+    /** Expanded home-screen groups; null until Home first shows. Not saved, so a restart starts collapsed. */
+    val expandedGroups = MutableStateFlow<Set<String>?>(null)
 
     override fun onCreate() {
         super.onCreate()

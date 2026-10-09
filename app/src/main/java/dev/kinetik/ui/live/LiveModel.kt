@@ -24,7 +24,6 @@ data class LiveModel(
     val bigIsClock: Boolean,
     /** "MAX" rather than a rep count; drawn smaller so it fits the ring on one line. */
     val bigIsWord: Boolean,
-    val unit: String?,
     val sub: String,
     val tags: List<String>,
     val beepZone: Boolean,
@@ -82,7 +81,6 @@ fun liveModel(s: SessionState): LiveModel {
         },
         bigIsClock = restStep != null || work?.kind == ExerciseKind.MAX_TIME,
         bigIsWord = work?.kind == ExerciseKind.MAX_REPS,
-        unit = if (work?.kind == ExerciseKind.REPS) "reps" else null,
         sub = work?.let { "Ex ${slots.indexOf(it.slot) + 1} of ${slots.size}" } ?: "Rest",
         tags = buildList {
             work?.weightKg?.let { add(kg(it)) }

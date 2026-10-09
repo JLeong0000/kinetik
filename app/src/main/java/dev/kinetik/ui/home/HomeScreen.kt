@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.MutableStateFlow
 import dev.kinetik.app
 import dev.kinetik.model.Exercise
 import dev.kinetik.model.Group
@@ -86,10 +87,25 @@ import dev.kinetik.ui.theme.KShape
 import dev.kinetik.ui.theme.KText
 import dev.kinetik.ui.components.kFieldColors
 
-private class HomeActions(private val store: WorkoutStore, private val onEdit: (String) -> Unit) {
+private class HomeActions(
+    private val store: WorkoutStore,
+    private val expanded: MutableStateFlow<Set<String>?>,
+    private val onEdit: (String) -> Unit,
+) {
+    fun toggle(groupId: String, current: Set<String>) {
+        expanded.value = if (groupId in current) current - groupId else current + groupId
+    }
+
+    /** New groups start expanded. */
+    private fun expandNewest() {
+        val id = store.library.value.groups.lastOrNull()?.id ?: return
+        expanded.value = (expanded.value ?: expandedOnStart(store.library.value)) + id
+    }
+
     fun newWorkout(groupId: String?) {
         val gid = groupId ?: store.library.value.groups.firstOrNull()?.id ?: run {
             store.update { it.addGroup("Workouts") }
+            expandNewest()
             store.library.value.groups.first().id
         }
         val w = Workout(
@@ -103,7 +119,10 @@ private class HomeActions(private val store: WorkoutStore, private val onEdit: (
     fun move(id: String, delta: Int) = store.update { it.moveWorkout(id, delta) }
     fun moveToGroup(id: String, groupId: String) = store.update { it.moveWorkoutToGroup(id, groupId) }
     fun delete(id: String) = store.update { it.deleteWorkout(id) }
-    fun addGroup() = store.update { it.addGroup("New group") }
+    fun addGroup() {
+        store.update { it.addGroup("New group") }
+        expandNewest()
+    }
     fun renameGroup(id: String, name: String) = store.update { it.renameGroup(id, name) }
     fun moveGroup(id: String, delta: Int) = store.update { it.moveGroup(id, delta) }
     fun deleteGroup(id: String) = store.update { it.deleteGroup(id) }
@@ -113,7 +132,11 @@ private class HomeActions(private val store: WorkoutStore, private val onEdit: (
 fun HomeScreen(mode: LayoutMode, onStart: (String) -> Unit, onEdit: (String) -> Unit, onSettings: () -> Unit) {
     val app = LocalContext.current.app
     val lib by app.store.library.collectAsStateWithLifecycle()
-    val actions = remember(onEdit) { HomeActions(app.store, onEdit) }
+    val actions = remember(onEdit) { HomeActions(app.store, app.expandedGroups, onEdit) }
+    // Collapse state lives for the app process only: a restart opens with just the up-next group expanded.
+    val expandedState by app.expandedGroups.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { if (app.expandedGroups.value == null) app.expandedGroups.value = expandedOnStart(lib) }
+    val expanded = expandedState ?: expandedOnStart(lib)
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     val featured = selectedId?.let(lib::workout) ?: lib.upNext()
     val snackbar = remember { SnackbarHostState() }
@@ -127,9 +150,9 @@ fun HomeScreen(mode: LayoutMode, onStart: (String) -> Unit, onEdit: (String) -> 
 
     Box(Modifier.fillMaxSize()) {
         if (mode == LayoutMode.COVER) {
-            HomeCover(lib, featured, { selectedId = it }, actions, onStart, onEdit, onSettings)
+            HomeCover(lib, expanded, featured, { selectedId = it }, actions, onStart, onEdit, onSettings)
         } else {
-            HomeMain(lib, featured, { selectedId = it }, actions, onStart, onEdit, onSettings)
+            HomeMain(lib, expanded, featured, { selectedId = it }, actions, onStart, onEdit, onSettings)
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).safeDrawingPadding())
     }
@@ -137,15 +160,15 @@ fun HomeScreen(mode: LayoutMode, onStart: (String) -> Unit, onEdit: (String) -> 
 
 @Composable
 private fun HomeCover(
-    lib: Library, featured: Workout?, onSelect: (String) -> Unit, actions: HomeActions,
+    lib: Library, expanded: Set<String>, featured: Workout?, onSelect: (String) -> Unit, actions: HomeActions,
     onStart: (String) -> Unit, onEdit: (String) -> Unit, onSettings: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
             HomeHeader(onAdd = { actions.newWorkout(null) }, onSettings = null)
             lib.groups.forEach { g ->
-                GroupHeader(g, lib, actions)
-                Bento(g, lib, featured?.id, bigFeatured = true, actions, onSelect, onStart, onEdit)
+                GroupHeader(g, lib, g.id in expanded, actions) { actions.toggle(g.id, expanded) }
+                if (g.id in expanded) Bento(g, lib, featured?.id, bigFeatured = true, actions, onSelect, onStart, onEdit)
                 Spacer(Modifier.size(18.dp))
             }
         }
@@ -161,7 +184,7 @@ private fun HomeCover(
 
 @Composable
 private fun HomeMain(
-    lib: Library, featured: Workout?, onSelect: (String) -> Unit, actions: HomeActions,
+    lib: Library, expanded: Set<String>, featured: Workout?, onSelect: (String) -> Unit, actions: HomeActions,
     onStart: (String) -> Unit, onEdit: (String) -> Unit, onSettings: () -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
@@ -170,8 +193,8 @@ private fun HomeMain(
             Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 18.dp)) {
                 HomeHeader(onAdd = { actions.newWorkout(null) }, onSettings = onSettings)
                 lib.groups.forEach { g ->
-                    GroupHeader(g, lib, actions)
-                    Bento(g, lib, featured?.id, bigFeatured = false, actions, onSelect, onStart, onEdit)
+                    GroupHeader(g, lib, g.id in expanded, actions) { actions.toggle(g.id, expanded) }
+                    if (g.id in expanded) Bento(g, lib, featured?.id, bigFeatured = false, actions, onSelect, onStart, onEdit)
                     Spacer(Modifier.size(18.dp))
                 }
             }
@@ -217,11 +240,15 @@ private fun HomeHeader(onAdd: () -> Unit, onSettings: (() -> Unit)?) {
 }
 
 @Composable
-private fun GroupHeader(g: Group, lib: Library, actions: HomeActions) {
+private fun GroupHeader(g: Group, lib: Library, open: Boolean, actions: HomeActions, onToggle: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     var renaming by remember { mutableStateOf(false) }
-    Row(Modifier.fillMaxWidth().padding(6.dp, 4.dp, 6.dp, 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Label(g.name, Modifier.weight(1f))
+    Row(
+        Modifier.fillMaxWidth().clip(KShape.Small).clickable(onClick = onToggle).padding(6.dp, 8.dp, 6.dp, 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(if (open) "▾" else "▸", Modifier.padding(end = 8.dp), style = KText.body.copy(color = K.Muted))
+        Label(g.name + if (open) "" else " · ${g.workouts.size}", Modifier.weight(1f))
         Box {
             Text("⋮", Modifier.clickable { menu = true }.padding(horizontal = 8.dp), style = KText.body.copy(color = K.Muted))
             DropdownMenu(menu, { menu = false }) {

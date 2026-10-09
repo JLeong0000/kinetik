@@ -270,7 +270,6 @@ private fun RingBlock(m: LiveModel, modifier: Modifier, stroke: Dp, bigSize: Tex
                             .copy(color = K.TealHi, shadow = Shadow(K.Teal.copy(alpha = 0.5f), blurRadius = 34f)),
                         maxLines = 1,
                     )
-                    m.unit?.let { Text(it, Modifier.padding(start = 4.dp, bottom = 14.dp), style = KText.body.copy(color = K.Muted, fontSize = 18.sp)) }
                 }
             }
             if (!m.isRest) {

@@ -18,7 +18,6 @@ class LiveModelTest {
         assertFalse(m.isRest)
         assertEquals("Pull ups", m.name)
         assertEquals("8", m.big)
-        assertEquals("reps", m.unit)
         assertEquals("Ex 1 of 4", m.sub)
         assertEquals(1, m.circuitNumber)
         assertEquals(5, m.circuits)
@@ -51,7 +50,6 @@ class LiveModelTest {
         val m = liveModel(neg)
         assertEquals("0:07", m.big)
         assertTrue(m.bigIsClock)
-        assertNull(m.unit)
         assertTrue("2 of 4" in m.tags)
         assertEquals("MAX·T", m.queue[0].reps)
     }
