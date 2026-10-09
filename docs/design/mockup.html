@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinetik Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page: #0b0d0d;
+    --bg: #121414;
+    --card: #1c2021;
+    --card-2: #252a2b;
+    --line: #2e3536;
+    --text: #eef3f2;
+    --muted: #8a9796;
+    --teal: #14b8a6;
+    --teal-hi: #5eead4;
+    --teal-dim: #0f5f57;
+    --rest: #f2b544;
+    --glow: 0 0 24px rgba(20, 184, 166, .45);
+    --display: "Archivo", sans-serif;
+    --display-stretch: 125%;
+    --display-scale: 1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--page); color: var(--text);
+    font-family: Manrope, system-ui, sans-serif; padding: 36px 16px 64px;
+  }
+  .d { font-family: var(--display); font-stretch: var(--display-stretch); font-weight: 800; }
+  .mono { font-family: "JetBrains Mono", monospace; font-weight: 700; }
+  .muted { color: var(--muted); }
+
+  header.page { max-width: 2000px; margin: 0 auto 10px; display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: end; justify-content: space-between; }
+  header.page h1 { font-size: calc(30px * var(--display-scale)); letter-spacing: -.5px; }
+  header.page h1 span { color: var(--teal); }
+  header.page p { color: var(--muted); margin-top: 6px; max-width: 640px; }
+
+  h2.section { max-width: 2000px; margin: 40px auto 16px; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: flex; gap: 12px; align-items: baseline; }
+  h2.section b { color: var(--text); font-size: calc(18px * var(--display-scale)); letter-spacing: 0; text-transform: none; font-family: var(--display); font-stretch: var(--display-stretch); }
+
+  .row { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; max-width: 2000px; margin: 0 auto; }
+  .shot { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .shot > .cap { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+
+  .dev { background: var(--bg); border: 7px solid #222728; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+  .dev.cover { width: 412px; height: 960px; border-radius: 38px; max-width: calc(100vw - 32px); }
+  .dev.main { width: 954px; height: 860px; border-radius: 26px; max-width: calc(100vw - 32px); }
+  .dev.main::after { /* hinge crease */
+    content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px;
+    background: linear-gradient(transparent, rgba(255,255,255,.05) 20%, rgba(255,255,255,.05) 80%, transparent); pointer-events: none;
+  }
+  .status { display: flex; justify-content: space-between; padding: 12px 24px 0; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .pad { padding: 16px; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; flex: 1; min-height: 0; }
+  .split > div { padding: 18px 22px; display: flex; flex-direction: column; min-height: 0; }
+
+  .card { background: var(--card); border-radius: 26px; padding: 16px; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; background: var(--card-2); font-size: 11px; font-weight: 700; color: var(--muted); }
+  .tag.t { background: rgba(20,184,166,.14); color: var(--teal-hi); }
+  .k { font-size: 10px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; color: var(--muted); }
+
+  /* Home */
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 6px 4px 16px; }
+  .top h3 { font-size: calc(26px * var(--display-scale)); }
+  .icon-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; }
+  .group-lbl { display: flex; justify-content: space-between; padding: 4px 6px 10px; }
+  .bento { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .w-card { position: relative; min-height: 168px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
+  .w-card.big { grid-column: span 2; min-height: 210px; justify-content: space-between; background: linear-gradient(140deg, #134e48 0%, #1c2021 62%); box-shadow: inset 0 0 0 1px rgba(94,234,212,.18); }
+  .w-card.sel { box-shadow: inset 0 0 0 2px var(--teal), var(--glow); }
+  .w-card h4 { font-size: calc(22px * var(--display-scale)); }
+  .w-card.big h4 { font-size: calc(40px * var(--display-scale)); letter-spacing: -1px; margin-top: 10px; }
+  .w-card .meta { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 4px; }
+  .w-card svg { position: absolute; right: 14px; top: 14px; }
+  .play { align-self: flex-start; display: inline-flex; gap: 8px; background: var(--teal); color: #04201d; font-weight: 800; font-size: 15px; border-radius: 999px; padding: 12px 22px; }
+  .add-card { border: 2px dashed var(--line); border-radius: 26px; display: grid; place-items: center; min-height: 168px; color: var(--muted); font-size: 34px; }
+  .nav { display: flex; justify-content: space-around; padding: 16px 0 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 700; }
+  .nav .on { color: var(--teal-hi); }
+
+  /* Editor */
+  .ed-top { display: flex; align-items: center; gap: 10px; padding: 4px 4px 14px; }
+  .ed-top h3 { font-size: calc(30px * var(--display-scale)); flex: 1; }
+  .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+  .rule { background: var(--card); border-radius: 18px; padding: 11px; }
+  .rule b { display: block; font-family: "JetBrains Mono"; font-size: 19px; color: var(--teal-hi); }
+  .rule span { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .ex-list { padding: 8px; }
+  .ex { display: flex; align-items: center; gap: 12px; padding: 11px 8px; border-radius: 16px; position: relative; }
+  .ex + .ex { border-top: 1px solid var(--line); }
+  .ex .grip { color: #4a5455; font-size: 15px; letter-spacing: -2px; }
+  .ex .n { font-family: "JetBrains Mono"; font-weight: 700; font-size: 21px; width: 32px; text-align: right; color: var(--teal-hi); }
+  .ex .nm { flex: 1; font-weight: 700; font-size: 15px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .ex.lifted { background: var(--card-2); border-top-color: transparent; box-shadow: 0 14px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(94,234,212,.35); z-index: 1; }
+  .ex.lifted + .ex { border-top-color: transparent; }
+  .plan-h { display: flex; justify-content: space-between; align-items: center; padding: 16px 6px 10px; }
+  .plan-h b { font-size: calc(15px * var(--display-scale)); }
+  .grid { display: grid; gap: 6px; }
+  .grid .c { text-align: center; font-size: 10px; font-weight: 800; color: var(--muted); }
+  .grid .rl { font-size: 11px; font-weight: 700; color: var(--muted); align-self: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cell { background: var(--card); border-radius: 10px; text-align: center; padding: 8px 0; font-family: "JetBrains Mono"; font-weight: 700; font-size: 14px; }
+  .cell.ov, .cell.whole {
+    background: repeating-linear-gradient(135deg, rgba(20,184,166,.18) 0 8px, rgba(20,184,166,.06) 8px 16px);
+    box-shadow: inset 0 0 0 1px rgba(94,234,212,.32); color: var(--teal-hi); font-family: Manrope; font-size: 11px; font-weight: 800;
+  }
+  .cell.whole { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; writing-mode: vertical-rl; transform: rotate(180deg); }
+  .cell.whole b { font-family: var(--display); font-stretch: var(--display-stretch); font-size: 13px; }
+
+  /* Live */
+  .live-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .live-top .v { font-family: "JetBrains Mono"; font-size: 24px; font-weight: 700; }
+  .live-top .v small { color: var(--muted); font-size: 16px; }
+  .dots { display: flex; gap: 6px; justify-content: center; margin: 16px 0 4px; }
+  .dots i { width: 26px; height: 6px; border-radius: 3px; background: var(--card-2); }
+  .dots i.done { background: var(--teal-dim); }
+  .dots i.now { background: var(--teal); box-shadow: var(--glow); }
+  .ring-wrap { position: relative; margin: 10px auto 0; }
+  .ring-wrap svg { position: absolute; inset: 0; }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .lbl { font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .reps { font-family: var(--display); font-stretch: var(--display-stretch); font-weight: 900; line-height: .95; color: var(--teal-hi); text-shadow: 0 0 34px rgba(20,184,166,.5); }
+  .reps small { font-size: 18px; color: var(--muted); text-shadow: none; margin-left: 4px; font-family: Manrope; font-stretch: 100%; font-weight: 700; }
+  .ex-name { font-family: var(--display); font-stretch: var(--display-stretch); font-weight: 800; margin-top: 6px; }
+  .clock { font-family: "JetBrains Mono"; font-weight: 700; letter-spacing: -2px; }
+  .clock.beep { color: var(--rest); animation: pulse 1s infinite; }
+  @keyframes pulse { 0% { transform: scale(1.08); } 40% { transform: scale(1); } }
+  .speak { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 11px; font-weight: 700; color: var(--muted); background: var(--card); padding: 5px 11px; border-radius: 999px; }
+  .speak::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); box-shadow: var(--glow); }
+  .done-btn { height: 84px; border-radius: 30px; background: var(--teal); color: #04201d; font-family: var(--display); font-stretch: var(--display-stretch); font-weight: 900; font-size: calc(26px * var(--display-scale)); letter-spacing: 1px; display: grid; place-items: center; }
+  .next { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 22px; padding: 12px 14px; }
+  .next .nn { font-family: "JetBrains Mono"; font-size: 28px; font-weight: 700; color: var(--teal-hi); width: 48px; height: 48px; display: grid; place-items: center; background: var(--card-2); border-radius: 14px; }
+  .next .info { flex: 1; }
+  .next .info div:not(.k) { font-weight: 800; font-size: 17px; margin-top: 2px; }
+  .ctrl { display: flex; gap: 10px; }
+  .ctrl div { flex: 1; height: 58px; border-radius: 20px; background: var(--card); display: grid; place-items: center; font-weight: 800; font-size: 14px; color: var(--muted); }
+  .ctrl div.p { background: var(--card-2); color: var(--text); }
+
+  .live-cluster { justify-content: center; gap: 14px; padding: 0 20px 40px; }
+  .live-cluster .ring-wrap { margin: 0 auto; }
+  .live-cluster .dots { margin: 0; }
+
+  /* Main-screen live: circuit queue */
+  .queue { display: flex; flex-direction: column; gap: 8px; }
+  .q { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 20px; background: var(--card); }
+  .q .qn { font-family: "JetBrains Mono"; font-size: 24px; width: 40px; text-align: right; color: var(--muted); }
+  .q .qt { flex: 1; font-weight: 700; font-size: 16px; }
+  .q.now { background: linear-gradient(90deg, rgba(20,184,166,.22), rgba(20,184,166,.06)); box-shadow: inset 0 0 0 1px rgba(94,234,212,.4); }
+  .q.now .qn { color: var(--teal-hi); }
+  .q.done { opacity: .45; }
+  .q.done .qt { text-decoration: line-through; }
+  .q .st { font-size: 11px; font-weight: 800; color: var(--muted); }
+  .q.now .st { color: var(--teal-hi); }
+  .circuits { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .circuits div { border-radius: 14px; background: var(--card); padding: 10px 0; text-align: center; font-size: 11px; font-weight: 800; color: var(--muted); }
+  .circuits div b { display: block; font-family: "JetBrains Mono"; font-size: 18px; color: var(--text); }
+  .circuits .done { background: var(--teal-dim); color: #cdeee9; }
+  .circuits .now { background: var(--teal); color: #04201d; box-shadow: var(--glow); }
+  .circuits .now b { color: #04201d; }
+
+  /* Flex mode */
+  .flex-top, .flex-bot { height: 50%; display: flex; align-items: center; gap: 28px; padding: 18px 34px; }
+  .flex-bot { border-top: 2px solid #2a3031; background: #0f1111; flex-direction: column; align-items: stretch; justify-content: center; gap: 14px; }
+  .dev.main.flex::after, .dev.main.blend::after { display: none; }
+  .dev.blend::before { /* v2's tilted top gradient on the right pane, feathered across the hinge */
+    content: ""; position: absolute; top: 0; bottom: 0; left: calc(50% - 29px); right: 0;
+    background: linear-gradient(190deg, #134540 0%, #121414 55%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 58px);
+    mask-image: linear-gradient(90deg, transparent 0, #000 58px);
+  }
+  .dev.blend > * { position: relative; z-index: 1; }
+  .dev.blend .w-card:not(.sel) { background: rgba(28, 32, 33, .82); }
+  .fold-label { position: absolute; right: 16px; top: calc(50% - 22px); font-size: 10px; font-weight: 800; letter-spacing: 1px; color: #4a5455; text-transform: uppercase; }
+
+  .notes { max-width: 1400px; margin: 40px auto 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .notes h4 { font-size: calc(14px * var(--display-scale)); margin-bottom: 6px; color: var(--teal-hi); }
+  .notes p { font-size: 13px; color: var(--muted); line-height: 1.55; }
+</style>
+</head>
+<body data-font="archivo">
+
+<header class="page">
+  <div>
+    <h1 class="d">Kinetik <span>·</span> mockup v5</h1>
+    <p>Galaxy Z Fold8 Ultra: cover screen (6.5″, tall 21:9) and main screen (8″, almost square). The rest screens are animated.</p>
+  </div>
+</header>
+
+<!-- ================= COVER SCREEN ================= -->
+<h2 class="section"><b>Cover screen</b> 6.5″ · 1080 × 2520 · ~412 × 960 dp · one-handed</h2>
+<div class="row">
+
+  <div class="shot"><div class="cap">Home</div>
+    <div class="dev cover">
+      <div class="status"><span>9:41</span><span>82%</span></div>
+      <div class="pad">
+        <div class="top"><h3 class="d">Workouts</h3><div class="icon-btn">+</div></div>
+        <div class="group-lbl"><span class="k">Calisthenics split</span><span class="muted">⋮</span></div>
+        <div class="bento">
+          <div class="card w-card big">
+            <svg data-ring="5,0,0,66,6"></svg>
+            <div><span class="tag t">Up next</span><h4 class="d">Pull</h4><div class="meta">5 circuits · 4 exercises · ~68 min</div></div>
+            <div class="play">▶ Start</div>
+          </div>
+          <div class="card w-card"><svg data-ring="6,-1,0,40,4"></svg><h4 class="d">Push</h4><div class="meta">6 circuits · ~80 min</div></div>
+          <div class="card w-card"><svg data-ring="6,-1,0,40,4"></svg><h4 class="d">Legs</h4><div class="meta">6 circuits · ~85 min</div></div>
+          <div class="card w-card"><svg data-ring="5,-1,0,40,4"></svg><h4 class="d">Abs</h4><div class="meta">4+1 circuits · ~30 min</div></div>
+          <div class="add-card">+</div>
+        </div>
+        <div style="flex:1"></div>
+      </div>
+      <div class="nav"><span class="on">● Workouts</span><span>Exercises</span><span>Settings</span></div>
+    </div>
+  </div>
+
+  <div class="shot"><div class="cap">Edit workout</div>
+    <div class="dev cover">
+      <div class="status"><span>9:41</span><span>82%</span></div>
+      <div class="pad">
+        <div class="ed-top"><span class="muted">‹</span><h3 class="d">Push</h3><span class="tag t">Save</span></div>
+        <div class="rules">
+          <div class="rule"><b>−1</b><span>reps / circuit</span></div>
+          <div class="rule"><b>3:00</b><span>rest · exercise</span></div>
+          <div class="rule"><b>4:00</b><span>rest · circuit</span></div>
+        </div>
+        <div class="card ex-list">
+          <div class="ex"><span class="grip">⋮⋮</span><span class="n">13</span><div class="nm">Dips<span class="tag">10 kg</span></div></div>
+          <div class="ex lifted"><span class="grip" style="color:var(--teal-hi)">⋮⋮</span><span class="n">11</span><div class="nm">Pike push ups</div></div>
+          <div class="ex"><span class="grip">⋮⋮</span><span class="n">12</span><div class="nm">Archer push ups</div></div>
+          <div class="ex"><span class="grip">⋮⋮</span><span class="n">11</span><div class="nm">Pseudo push ups</div></div>
+        </div>
+        <div class="plan-h"><b class="d">Circuit plan</b><span class="tag">+ Override</span></div>
+        <div class="grid" data-plan="push" data-labels="0"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot"><div class="cap">Live · exercise</div>
+    <div class="dev cover">
+      <div class="status"><span>9:41</span><span>82%</span></div>
+      <div class="pad live-cluster">
+        <div class="live-top">
+          <div><div class="k">Circuit</div><div class="v">2<small>/5</small></div></div>
+          <div class="k" style="padding-top:4px">Pull</div>
+          <div style="text-align:right"><div class="k">Left</div><div class="v">51:20</div></div>
+        </div>
+        <div class="dots"><i class="done"></i><i class="now"></i><i></i><i></i><i></i></div>
+        <div class="ring-wrap" style="width:340px;height:340px">
+          <svg data-ring="4,0,0,340,18,5"></svg>
+          <div class="ring-center">
+            <div class="lbl">Ex 1 of 4</div>
+            <div class="reps" style="font-size:calc(116px * var(--display-scale))">6<small>reps</small></div>
+            <div class="ex-name" style="font-size:calc(24px * var(--display-scale))">Pull ups</div>
+            <div class="speak">“Pull ups, six”</div>
+          </div>
+        </div>
+        <div class="next" style="opacity:.7"><div class="nn" style="font-size:22px">6</div><div class="info"><div class="k">After rest</div><div>Chin ups</div></div></div>
+        <div class="done-btn">DONE</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot"><div class="cap">Live · rest</div>
+    <div class="dev cover">
+      <div class="status"><span>9:41</span><span>82%</span></div>
+      <div class="pad live-cluster">
+        <div class="live-top">
+          <div><div class="k">Circuit</div><div class="v">2<small>/5</small></div></div>
+          <div class="k" style="padding-top:4px">Pull</div>
+          <div style="text-align:right"><div class="k">Left</div><div class="v">48:12</div></div>
+        </div>
+        <div class="dots"><i class="done"></i><i class="now"></i><i></i><i></i><i></i></div>
+        <div class="ring-wrap" style="width:340px;height:340px">
+          <svg data-rest="340,18"></svg>
+          <div class="ring-center">
+            <div class="lbl" style="color:var(--rest)">Rest</div>
+            <div class="clock" style="font-size:76px">0:15</div>
+            <div class="speak speak-rest">“Rest”</div>
+          </div>
+        </div>
+        <div class="next"><div class="nn">6</div><div class="info"><div class="k">Up next · Ex 2 of 4</div><div>Chin ups</div></div></div>
+        <div class="ctrl"><div>−30s</div><div class="p">❚❚ Pause</div><div>Skip ›</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MAIN SCREEN ================= -->
+<h2 class="section"><b>Main screen</b> 8″ · 2504 × 2256 · ~954 × 860 dp · two panes split at the hinge</h2>
+<div class="row">
+
+  <div class="shot"><div class="cap">Home · list + detail</div>
+    <div class="dev main blend">
+      <div class="status"><span>9:41</span><span>82%</span></div>
+      <div class="split">
+        <div>
+          <div class="top"><h3 class="d">Workouts</h3><div class="icon-btn">+</div></div>
+          <div class="group-lbl"><span class="k">Calisthenics split</span><span class="muted">⋮</span></div>
+          <div class="bento">
+            <div class="card w-card sel"><svg data-ring="5,0,0,40,4"></svg><span class="tag t" style="align-self:flex-start;margin-bottom:auto">Up next</span><h4 class="d">Pull</h4><div class="meta">5 circuits · ~68 min</div></div>
+            <div class="card w-card"><svg data-ring="6,-1,0,40,4"></svg><h4 class="d">Push</h4><div class="meta">6 circuits · ~80 min</div></div>
+            <div class="card w-card"><svg data-ring="6,-1,0,40,4"></svg><h4 class="d">Legs</h4><div class="meta">6 circuits · ~85 min</div></div>
+            <div class="card w-card"><svg data-ring="5,-1,0,40,4"></svg><h4 class="d">Abs</h4><div class="meta">4+1 circuits · ~30 min</div></div>
+            <div class="add-card" style="grid-column:span 2;min-height:90px">+ New workout</div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div><span class="k">Workout</span><h3 class="d" style="font-size:calc(64px * var(--display-scale));letter-spacing:-2px;line-height:1">Pull</h3></div>
+            <svg data-ring="5,0,0,96,9"></svg>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0">
+            <div class="rule"><b>5</b><span>circuits</span></div>
+            <div class="rule"><b>−2</b><span>reps / circuit</span></div>
+            <div class="rule"><b>~68m</b><span>total</span></div>
+          </div>
+          <div class="grid" data-plan="pull" data-labels="1"></div>
+          <div style="flex:1"></div>
+          <div style="display:flex;gap:10px">
+            <div class="ctrl" style="flex:0 0 120px"><div>✎ Edit</div></div>
+            <div class="done-btn" style="flex:1;height:64px;font-size:calc(20px * var(--display-scale))">▶ START</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot"><div class="cap">Edit · exercises + plan side by side</div>
+    <div class="dev main">
+      <div class="status"><span>9:41</span><span>82%</span></div>
+      <div class="split">
+        <div>
+          <div class="ed-top"><span class="muted">‹</span><h3 class="d">Pull</h3></div>
+          <div class="rules">
+            <div class="rule"><b>−2</b><span>reps / circuit</span></div>
+            <div class="rule"><b>3:00</b><span>rest · exercise</span></div>
+            <div class="rule"><b>4:00</b><span>rest · circuit</span></div>
+          </div>
+          <div class="card ex-list">
+            <div class="ex"><span class="grip">⋮⋮</span><span class="n">8</span><div class="nm">Pull ups</div></div>
+            <div class="ex"><span class="grip">⋮⋮</span><span class="n">8</span><div class="nm">Chin ups</div></div>
+            <div class="ex lifted"><span class="grip" style="color:var(--teal-hi)">⋮⋮</span><span class="n">9</span><div class="nm">Inverted pull up rows</div></div>
+            <div class="ex"><span class="grip">⋮⋮</span><span class="n">9</span><div class="nm">Inverted chin up rows</div></div>
+          </div>
+          <div class="tag" style="margin-top:12px;align-self:flex-start;padding:10px 14px">+ Add exercise</div>
+        </div>
+        <div>
+          <div class="plan-h" style="padding-top:8px"><b class="d" style="font-size:calc(20px * var(--display-scale))">Circuit plan</b><span class="tag t">Live preview</span></div>
+          <div class="grid" data-plan="pull" data-labels="1"></div>
+          <div class="k" style="margin:22px 0 8px">Overrides</div>
+          <div class="card" style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:10px;align-items:center"><span class="tag t">C4 · slot 1–2</span><span style="font-weight:700;font-size:14px">Max-time negatives × 4</span></div>
+            <div style="display:flex;gap:10px;align-items:center"><span class="tag t">C5 · whole</span><span style="font-weight:700;font-size:14px">Max alternating CU / PU negatives</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot"><div class="cap">Live · ring + circuit queue</div>
+    <div class="dev main">
+      <div class="status"><span>9:41</span><span>82%</span></div>
+      <div class="split">
+        <div style="justify-content:center">
+          <div class="live-top"><div><div class="k">Pull</div><div class="v">Circuit 2<small>/5</small></div></div></div>
+          <div class="ring-wrap" style="width:400px;height:400px;margin-top:20px">
+            <svg data-ring="4,0,0,400,20,5"></svg>
+            <div class="ring-center">
+              <div class="lbl">Ex 1 of 4</div>
+              <div class="reps" style="font-size:calc(150px * var(--display-scale))">6<small>reps</small></div>
+              <div class="ex-name" style="font-size:calc(28px * var(--display-scale))">Pull ups</div>
+              <div class="speak">“Pull ups, six”</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="text-align:right"><div class="k">Left</div><div class="v mono" style="font-size:24px">51:20</div></div>
+          <div class="k" style="margin:10px 0 8px">This circuit</div>
+          <div class="queue">
+            <div class="q now"><span class="qn mono">6</span><span class="qt">Pull ups</span><span class="st">NOW</span></div>
+            <div class="q"><span class="qn mono">6</span><span class="qt">Chin ups</span><span class="st">3:00 rest</span></div>
+            <div class="q"><span class="qn mono">7</span><span class="qt">Inverted pull up rows</span><span class="st">3:00 rest</span></div>
+            <div class="q"><span class="qn mono">7</span><span class="qt">Inverted chin up rows</span><span class="st">3:00 rest</span></div>
+          </div>
+          <div class="k" style="margin:20px 0 8px">Circuits</div>
+          <div class="circuits"><div class="done"><b>1</b>done</div><div class="now"><b>2</b>now</div><div><b>3</b>4·4·5·5</div><div><b>4</b>negs</div><div><b>5</b>max</div></div>
+          <div style="flex:1"></div>
+          <div class="done-btn">DONE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot"><div class="cap">Flex mode · half-folded on the floor</div>
+    <div class="dev main flex">
+      <div class="flex-top">
+        <div class="ring-wrap" style="width:340px;height:340px;margin:0">
+          <svg data-rest="340,18"></svg>
+          <div class="ring-center">
+            <div class="lbl" style="color:var(--rest)">Rest</div>
+            <div class="clock" style="font-size:80px">0:15</div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div class="k">Pull · Circuit 2/5 · Ex 1 of 4 done</div>
+          <div class="d" style="font-size:calc(44px * var(--display-scale));line-height:1.05;margin-top:10px">Next up<br><span style="color:var(--teal-hi)">6 Chin ups</span></div>
+          <div class="speak speak-rest">“Rest”</div>
+        </div>
+      </div>
+      <span class="fold-label">fold</span>
+      <div class="flex-bot">
+        <div class="dots" style="justify-content:flex-start;margin:0"><i class="done"></i><i class="now"></i><i></i><i></i><i></i></div>
+        <div class="ctrl"><div style="height:80px;font-size:16px">−30s</div><div class="p" style="height:80px;font-size:16px">❚❚ Pause</div><div style="height:80px;font-size:16px">Skip ›</div></div>
+        <div class="done-btn" style="height:80px;background:var(--card-2);color:var(--muted);box-shadow:none">DONE shows here during sets</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <div class="card"><h4 class="d">Cover = the gym screen</h4><p>Folded and used one-handed. These are the same four screens as before, stretched to the taller 21:9 cover screen. The extra height goes to a bigger ring and a larger DONE button.</p></div>
+  <div class="card"><h4 class="d">Main = planning + a big live view</h4><p>The 8″ inner screen is almost square, so every screen splits at the hinge. On the left is what you're doing, and on the right is the context: the circuit plan, the exercise queue and which circuits are done.</p></div>
+  <div class="card"><h4 class="d">Flex mode = phone on the floor</h4><p>Half-fold the phone and stand it up. The top half shows the timer and the bottom half shows big buttons. That suits push-ups and Nordics, when you can't hold the phone.</p></div>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const arc = (c, r, a0, a1) => {
+  const p = a => [c + r * Math.cos((a - 90) * Math.PI / 180), c + r * Math.sin((a - 90) * Math.PI / 180)];
+  const [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `M${x0} ${y0} A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1} ${y1}`;
+};
+function stroke(svg, d, col, w, glow) {
+  const el = document.createElementNS(NS, "path");
+  el.setAttribute("d", d); el.setAttribute("fill", "none"); el.setAttribute("stroke", col);
+  el.setAttribute("stroke-width", w); el.setAttribute("stroke-linecap", "round");
+  if (glow) el.setAttribute("filter", `drop-shadow(0 0 8px ${glow})`);
+  svg.appendChild(el); return el;
+}
+
+// data-ring="segments,activeIndex,doneCount,size,strokeWidth[,gapDeg]"
+document.querySelectorAll("svg[data-ring]").forEach(svg => {
+  const [n, on, done, size, w, gap = 9] = svg.dataset.ring.split(",").map(Number);
+  svg.setAttribute("width", size); svg.setAttribute("height", size);
+  const c = size / 2, r = c - w, span = 360 / n;
+  for (let i = 0; i < n; i++) {
+    const col = i === on ? "#14b8a6" : i < done ? "#0f5f57" : "#2a3031";
+    stroke(svg, arc(c, r, i * span + gap, (i + 1) * span - gap), col, w, i === on ? "rgba(20,184,166,.8)" : null);
+  }
+});
+
+// rest rings drain from 0:15; the last 5 seconds are the beeps
+const rests = [...document.querySelectorAll("svg[data-rest]")].map(svg => {
+  const [size, w] = svg.dataset.rest.split(",").map(Number);
+  svg.setAttribute("width", size); svg.setAttribute("height", size);
+  const c = size / 2, r = c - w;
+  stroke(svg, arc(c, r, 0, 359.9), "#2a3031", w);
+  return { c, r, el: stroke(svg, arc(c, r, 0, 359.9), "#f2b544", w, "rgba(242,181,68,.6)") };
+});
+const total = 15; let t = total;
+function tick() {
+  rests.forEach(({ c, r, el }) => el.setAttribute("d", arc(c, r, 0, Math.max(0.1, 359.9 * t / total))));
+  document.querySelectorAll(".clock").forEach(el => {
+    el.textContent = `0:${String(t).padStart(2, "0")}`;
+    el.classList.toggle("beep", t <= 5);
+  });
+  document.querySelectorAll(".speak-rest").forEach(el => el.textContent = t <= 5 ? (t > 0 ? `beep · ${t}` : "beep — go") : "“Rest”");
+  t = t <= 0 ? total : t - 1;
+}
+tick(); setInterval(tick, 1000);
+
+// plan grids: rules + overrides
+const plans = {
+  push: { names: ["Dips", "Pike", "Archer", "Pseudo"], start: [13, 11, 12, 11], drop: 1, circuits: 6,
+          whole: { 4: "Dips · 10s break", 5: "Push ups · 10s break" }, slot: {} },
+  pull: { names: ["Pull ups", "Chin ups", "Inv. PU rows", "Inv. CU rows"], start: [8, 8, 9, 9], drop: 2, circuits: 5,
+          whole: { 4: "Alt CU / PU negs" }, slot: { "3,0": "NEG×4", "3,1": "NEG×4" } },
+};
+document.querySelectorAll("[data-plan]").forEach(g => {
+  const p = plans[g.dataset.plan], labels = g.dataset.labels === "1", off = labels ? 1 : 0;
+  g.style.gridTemplateColumns = (labels ? "92px " : "") + `repeat(${p.circuits}, 1fr)`;
+  let html = labels ? `<div></div>` : "";
+  for (let c = 0; c < p.circuits; c++) html += `<div class="c">C${c + 1}</div>`;
+  for (let row = 0; row < 4; row++) {
+    if (labels) html += `<div class="rl" style="grid-row:${row + 2}">${p.names[row]}</div>`;
+    for (let c = 0; c < p.circuits; c++) {
+      const pos = `grid-column:${c + 1 + off};grid-row:${row + 2}`;
+      if (p.whole[c] !== undefined) {
+        if (row === 0) html += `<div class="cell whole" style="grid-column:${c + 1 + off};grid-row:2 / span 4"><b>MAX</b>${p.whole[c]}</div>`;
+      } else if (p.slot[`${c},${row}`]) {
+        html += `<div class="cell ov" style="${pos}">${p.slot[`${c},${row}`]}</div>`;
+      } else {
+        html += `<div class="cell" style="${pos}">${p.start[row] - c * p.drop}</div>`;
+      }
+    }
+  }
+  g.innerHTML = html;
+});
+
+</script>
+</body>
+</html>
