@@ -12,9 +12,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import dev.kinetik.ui.theme.K
 
-private fun DrawScope.ring(color: Color, start: Float, sweep: Float, w: Float) {
-    val arcSize = Size(size.width - w * 2, size.height - w * 2)
-    drawArc(color, start, sweep, false, Offset(w, w), arcSize, style = Stroke(w, cap = StrokeCap.Round))
+/** Arc centred on a circle inset by [inset] from the edge; a wider [stroke] at the same inset makes a halo. */
+private fun DrawScope.ring(color: Color, start: Float, sweep: Float, stroke: Float, inset: Float = stroke) {
+    val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
+    drawArc(color, start, sweep, false, Offset(inset, inset), arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
 }
 
 /** One segment per item; [active] glows teal, segments before [done] are dim teal. Pass active = -1 for none. */
@@ -27,7 +28,7 @@ fun SegmentedRing(segments: Int, active: Int, done: Int, modifier: Modifier, str
         for (i in 0 until n) {
             val start = -90f + i * span + gapDeg
             val sweep = (span - gapDeg * 2).coerceAtLeast(1f)
-            if (i == active) ring(K.Teal.copy(alpha = 0.22f), start, sweep, w * 1.6f)
+            if (i == active) ring(K.Teal.copy(alpha = 0.22f), start, sweep, w * 1.6f, inset = w)
             val color = when {
                 i == active -> K.Teal
                 i < done -> K.TealDim
@@ -46,7 +47,7 @@ fun RestRing(fraction: Float, modifier: Modifier, stroke: Dp) {
         ring(K.Track, 0f, 360f, w)
         val sweep = 360f * fraction.coerceIn(0f, 1f)
         if (sweep > 0f) {
-            ring(K.Rest.copy(alpha = 0.22f), -90f, sweep, w * 1.6f)
+            ring(K.Rest.copy(alpha = 0.22f), -90f, sweep, w * 1.6f, inset = w)
             ring(K.Rest, -90f, sweep, w)
         }
     }
