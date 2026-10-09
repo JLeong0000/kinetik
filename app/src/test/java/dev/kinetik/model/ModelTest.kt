@@ -38,9 +38,18 @@ class ModelTest {
         assertEquals(1, d.overrides.single().slot)
     }
 
-    @Test fun setCircuitsDropsOverridesPastTheEnd() {
+    @Test fun setCircuitsKeepsOverridesUntilPruned() {
         val w = workout("A").copy(overrides = listOf(slotOverride(0, 0), slotOverride(2, 0)))
-        assertEquals(listOf(0), w.setCircuits(2).overrides.map { it.circuit })
+        val fewer = w.setCircuits(2)
+        assertEquals(listOf(0, 2), fewer.overrides.map { it.circuit }) // "+" again brings C3's override back
+        assertEquals(listOf(0, 2), fewer.setCircuits(3).overrides.map { it.circuit })
+        assertEquals(listOf(0), fewer.pruned().overrides.map { it.circuit })
+        assertEquals(emptyList<String>(), fewer.pruned().validate())
+    }
+
+    @Test fun workoutCodecRoundTrips() {
+        val w = workout("A", "B").copy(overrides = listOf(slotOverride(1, 1)))
+        assertEquals(w, WorkoutCodec.decode(WorkoutCodec.encode(w)))
     }
 
     @Test fun upsertOverrideReplacesByIdAndSorts() {

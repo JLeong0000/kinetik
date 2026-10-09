@@ -2,6 +2,7 @@ package dev.kinetik.widget
 
 import dev.kinetik.model.Library
 import dev.kinetik.model.Seed
+import dev.kinetik.model.upNext
 import dev.kinetik.session.Control
 import dev.kinetik.session.SessionEvent
 import dev.kinetik.session.SessionState
@@ -60,6 +61,7 @@ class WidgetModelTest {
         val m = widgetModel(done, lib)
         assertEquals("Workout complete", m.title)
         assertTrue(m.controls.isEmpty())
+        assertEquals(lib.upNext()?.id, m.startWorkoutId)
     }
 
     // Review 2: the idle widget said "1 circuits" for regular workouts.

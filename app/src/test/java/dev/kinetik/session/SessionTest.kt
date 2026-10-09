@@ -168,5 +168,6 @@ class SessionTest {
     @Test fun aSecondStartIsIgnoredWhileASessionExists() {
         assertTrue(canStart(null))
         assertEquals(false, canStart(SessionState.start(two)))
+        assertTrue(canStart(SessionState.start(two).after(SessionEvent.Done, SessionEvent.Skip, SessionEvent.Done)))
     }
 }

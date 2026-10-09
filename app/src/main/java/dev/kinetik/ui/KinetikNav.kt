@@ -42,10 +42,9 @@ fun KinetikNav(mode: LayoutMode) {
             EditorScreen(entry.arguments?.getString("id").orEmpty(), mode, onBack = { nav.popBackStack() })
         }
         composable("live") {
+            // Back to wherever the workout was started from (home, or an open editor with its unsaved draft).
             LiveScreen(mode, onExit = {
-                if (!nav.popBackStack("home", inclusive = false)) {
-                    nav.navigate("home") { popUpTo("live") { inclusive = true } }
-                }
+                if (!nav.popBackStack()) nav.navigate("home") { popUpTo("live") { inclusive = true } }
             })
         }
         composable("settings") { SettingsScreen(onBack = { nav.popBackStack() }) }

@@ -57,5 +57,5 @@ fun controlsFor(s: SessionState): List<Control> = when {
 /** The foreground service (notification, wake lock, media button) runs only while a workout is in progress. */
 fun serviceShouldRun(s: SessionState?): Boolean = s != null && s.phase != Phase.FINISHED
 
-/** A workout can only start when none is running, so a double-tapped START starts once. */
-fun canStart(current: SessionState?): Boolean = current == null
+/** A workout starts when none is running (so a double-tapped START starts once) or the last one has finished. */
+fun canStart(current: SessionState?): Boolean = current == null || current.phase == Phase.FINISHED

@@ -8,6 +8,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import kotlinx.coroutines.launch
 import org.junit.Test
 
 class LiveModelTest {
@@ -73,5 +74,16 @@ class LiveModelTest {
     @Test fun maxIsMarkedAsAWordSoItIsDrawnSmaller() {
         assertTrue(liveModel(SessionState.start(Seed.push()).copy(index = 32)).bigIsWord)
         assertFalse(liveModel(pull).bigIsWord)
+    }
+
+    @Test fun liveModelsAreDedupedAcrossTicks() = kotlinx.coroutines.test.runTest {
+        val session = kotlinx.coroutines.flow.MutableStateFlow<SessionState?>(reduce(pull, SessionEvent.Done))
+        val seen = mutableListOf<LiveUi?>()
+        val job = launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) { liveUi(session).collect { seen += it } }
+        repeat(9) { session.value = reduce(session.value!!, SessionEvent.Tick(100)) }
+        assertEquals(1, seen.size)
+        session.value = reduce(session.value!!, SessionEvent.Tick(100))
+        assertEquals(2, seen.size)
+        job.cancel()
     }
 }

@@ -112,4 +112,9 @@ class RegularTest {
         assertEquals("2 blocks · 3 exercises", pushDay.summary())
         assertEquals("5 circuits · 4 exercises", dev.kinetik.model.Seed.pull().summary())
     }
+
+    @Test fun oneSetShowsNoSetRest() {
+        assertEquals("1 × 10", dev.kinetik.ui.components.setsLabel(Exercise(name = "X", startReps = 10, sets = 1), null))
+        assertEquals("3 × 10 · 1:30", dev.kinetik.ui.components.setsLabel(Exercise(name = "X", startReps = 10, sets = 3), null))
+    }
 }

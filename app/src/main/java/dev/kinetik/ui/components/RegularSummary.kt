@@ -22,9 +22,10 @@ import dev.kinetik.ui.theme.K
 import dev.kinetik.ui.theme.KShape
 import dev.kinetik.ui.theme.KText
 
-/** "3 × 8 · 2:00" — sets × reps and the rest between sets (the workout-wide one if it's switched on). */
+/** "3 × 8 · 2:00" — sets × reps and the rest between sets (the workout-wide one if on); a single set has no set rest. */
 fun setsLabel(e: Exercise, globalRestSec: Int?): String {
     val reps = shortLabel(e.copy(sets = 1), e.startReps)
+    if (e.sets <= 1) return "1 × $reps"
     return "${e.sets} × $reps · ${countdown((globalRestSec ?: e.restSec) * 1000L)}"
 }
 

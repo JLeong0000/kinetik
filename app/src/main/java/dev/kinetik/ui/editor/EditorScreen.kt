@@ -41,6 +41,11 @@ import dev.kinetik.model.Exercise
 import dev.kinetik.model.ExerciseKind
 import dev.kinetik.model.OverrideScope
 import dev.kinetik.model.Workout
+import dev.kinetik.model.WorkoutCodec
+import dev.kinetik.model.pruned
+import androidx.compose.runtime.key
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import dev.kinetik.model.WorkoutType
 import dev.kinetik.model.addBlock
 import dev.kinetik.model.deleteBlock
@@ -82,19 +87,22 @@ fun EditorScreen(workoutId: String, mode: LayoutMode, onBack: () -> Unit) {
         LaunchedEffect(Unit) { onBack() }
         return
     }
-    var draft by remember(workoutId) { mutableStateOf(saved) }
+    // Saveable, so unsaved edits survive activity recreation and process death.
+    var draft by rememberSaveable(workoutId, stateSaver = Saver(save = { WorkoutCodec.encode(it) }, restore = { WorkoutCodec.decode(it) })) {
+        mutableStateOf(saved)
+    }
     var exerciseEdit by remember { mutableStateOf<Pair<Exercise, Boolean>?>(null) }
     /** Regular workouts: (block id, exercise, isNew). */
     var blockExerciseEdit by remember { mutableStateOf<Triple<String, Exercise, Boolean>?>(null) }
     var overrideEdit by remember { mutableStateOf<Pair<CircuitOverride, Boolean>?>(null) }
     var stepper by remember { mutableStateOf<StepperSpec?>(null) }
     var confirmDiscard by remember { mutableStateOf(false) }
-    val errors = remember(draft) { draft.validate() }
+    val errors = remember(draft) { draft.pruned().validate() }
     val dirty = draft != saved
 
     fun save() {
         if (errors.isNotEmpty()) return
-        app.store.update { it.updateWorkout(draft) }
+        app.store.update { it.updateWorkout(draft.pruned()) }
         onBack()
     }
     val back: () -> Unit = { if (dirty) { confirmDiscard = true } else { onBack() } }
@@ -122,7 +130,7 @@ fun EditorScreen(workoutId: String, mode: LayoutMode, onBack: () -> Unit) {
     }
     val blocks: @Composable () -> Unit = {
         RegularRuleTiles(draft, { stepper = it }) { draft = it }
-        draft.blocks.forEach { b ->
+        draft.blocks.forEach { b -> key(b.id) {
             BlockCard(
                 draft, b,
                 onRename = { draft = draft.renameBlock(b.id, it) },
@@ -132,7 +140,7 @@ fun EditorScreen(workoutId: String, mode: LayoutMode, onBack: () -> Unit) {
                 onTapExercise = { blockExerciseEdit = Triple(b.id, it, false) },
                 onAddExercise = { blockExerciseEdit = Triple(b.id, Exercise(name = "", startReps = 10, sets = 3), true) },
             )
-        }
+        } }
         AddBlockButton { draft = draft.addBlock() }
         errorText()
     }

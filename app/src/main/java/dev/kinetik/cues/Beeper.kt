@@ -16,17 +16,30 @@ fun beepPcm(freqHz: Double, seconds: Double, sampleRate: Int = 44_100): ShortArr
     }
 }
 
-class Beeper(private val attrs: AudioAttributes) {
+/**
+ * Two prebuilt static tracks, replayed for every beep (no per-beep allocation, lower latency).
+ * Audio failures are swallowed: a missed beep must never crash a running workout.
+ */
+class Beeper(attrs: AudioAttributes) {
     private val rate = 44_100
-    private val short = beepPcm(880.0, 0.15, rate)
-    private val long = beepPcm(1_320.0, 0.6, rate)
+    private val short = runCatching { track(attrs, beepPcm(880.0, 0.15, rate)) }.getOrNull()
+    private val long = runCatching { track(attrs, beepPcm(1_320.0, 0.6, rate)) }.getOrNull()
 
     /** 0f..1f */
     var volume = 0.8f
 
     fun play(isLong: Boolean) {
-        val pcm = if (isLong) long else short
-        val track = AudioTrack.Builder()
+        val t = (if (isLong) long else short) ?: return
+        runCatching {
+            if (t.playState == AudioTrack.PLAYSTATE_PLAYING) t.stop()
+            t.reloadStaticData()
+            t.setVolume(volume)
+            t.play()
+        }
+    }
+
+    private fun track(attrs: AudioAttributes, pcm: ShortArray): AudioTrack {
+        val t = AudioTrack.Builder()
             .setAudioAttributes(attrs)
             .setAudioFormat(
                 AudioFormat.Builder()
@@ -38,13 +51,7 @@ class Beeper(private val attrs: AudioAttributes) {
             .setTransferMode(AudioTrack.MODE_STATIC)
             .setBufferSizeInBytes(pcm.size * 2)
             .build()
-        track.write(pcm, 0, pcm.size)
-        track.setVolume(volume)
-        track.notificationMarkerPosition = pcm.size
-        track.setPlaybackPositionUpdateListener(object : AudioTrack.OnPlaybackPositionUpdateListener {
-            override fun onMarkerReached(t: AudioTrack) = t.release()
-            override fun onPeriodicNotification(t: AudioTrack) = Unit
-        })
-        track.play()
+        t.write(pcm, 0, pcm.size)
+        return t
     }
 }

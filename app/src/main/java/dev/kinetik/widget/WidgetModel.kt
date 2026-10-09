@@ -33,7 +33,8 @@ fun widgetModel(s: SessionState?, lib: Library): WidgetModel {
         return WidgetModel("Up next", w.name, "", "${w.summary().substringBefore(" ·")} · ~$minutes min", false, emptyList(), w.id)
     }
     if (s.phase == Phase.FINISHED) {
-        return WidgetModel(s.workoutName, "Workout complete", "", "", false, emptyList(), null)
+        val next = lib.upNext()
+        return WidgetModel(s.workoutName, "Workout complete", "", next?.let { "Up next: ${it.name}" }.orEmpty(), false, emptyList(), next?.id)
     }
     val m = liveModel(s)
     return WidgetModel(

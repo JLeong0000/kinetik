@@ -70,24 +70,26 @@ import dev.kinetik.ui.theme.KText
 @Composable
 fun LiveScreen(mode: LayoutMode, onExit: () -> Unit) {
     val app = LocalContext.current.app
-    val state by app.session.state.collectAsStateWithLifecycle()
+    // Deduped: the screen only recomposes when something visible changes (about once a second), not every tick.
+    val uiFlow = remember { liveUi(app.session.state) }
+    val ui by uiFlow.collectAsStateWithLifecycle(initialValue = liveUi0(app.session.state.value))
     val lib by app.store.library.collectAsStateWithLifecycle()
     val voiceReady by app.cues.voiceReady.collectAsStateWithLifecycle()
     var confirmEnd by remember { mutableStateOf(false) }
 
     // Leaving always goes through stop() → state becomes null → we exit once.
-    val s = state ?: run {
+    val u = ui ?: run {
         LaunchedEffect(Unit) { onExit() }
         return
     }
-    KeepScreenOn(lib.settings.keepScreenOn)
-    BackHandler { if (s.phase == Phase.FINISHED) { app.session.stop() } else { confirmEnd = true } }
+    KeepScreenOn(lib.settings.keepScreenOn && !u.finished)
+    BackHandler { if (u.finished) { app.session.stop() } else { confirmEnd = true } }
 
-    if (s.phase == Phase.FINISHED) {
-        Finished(s) { app.session.stop() }
+    val m = u.model
+    if (u.finished || m == null) {
+        Finished(u) { app.session.stop() }
         return
     }
-    val m = remember(s) { liveModel(s) }
     val send: (SessionEvent) -> Unit = app.session::send
     val voiceMissing = lib.settings.voiceOn && !voiceReady
     val onEnd = { confirmEnd = true }
@@ -174,7 +176,7 @@ private fun LiveMain(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: B
                 Label("Left")
                 Text(m.timeLeft, style = KText.mono(24.sp))
             }
-            Label("This circuit", Modifier.padding(top = 10.dp, bottom = 8.dp))
+            Label("This ${m.section.lowercase()}", Modifier.padding(top = 10.dp, bottom = 8.dp))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { m.queue.forEach { QueueRowView(it) } }
             Label("${m.section}s", Modifier.padding(top = 20.dp, bottom = 8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -304,7 +306,23 @@ private fun FitText(text: String, modifier: Modifier, style: TextStyle, maxLines
 
 @Composable
 private fun NextStrip(m: LiveModel, label: String, dim: Boolean) {
-    if (m.nextName == null) return
+    if (m.nextName == null) {
+        // Last set: keep the strip's space so DONE doesn't jump up.
+        Row(
+            Modifier.fillMaxWidth().alpha(0.7f).clip(RoundedCornerShape(22.dp)).background(K.Card).padding(12.dp, 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(K.Card2), contentAlignment = Alignment.Center) {
+                Text("✓", style = KText.body.copy(color = K.TealHi, fontSize = 22.sp))
+            }
+            Column {
+                Label("Last set")
+                Text("Finish strong", style = KText.body.copy(fontSize = 17.sp))
+            }
+        }
+        return
+    }
     Row(
         Modifier.fillMaxWidth().alpha(if (dim) 0.7f else 1f).clip(RoundedCornerShape(22.dp)).background(K.Card).padding(12.dp, 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -364,15 +382,21 @@ private fun QueueRowView(r: QueueRow) {
 }
 
 @Composable
-private fun Finished(s: SessionState, onClose: () -> Unit) {
+private fun Finished(u: LiveUi, onClose: () -> Unit) {
     Column(
         Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Label(s.workoutName)
+        Label(u.workoutName)
         Text("Workout\ncomplete", style = KText.display(44.sp), textAlign = TextAlign.Center)
-        Text(stopwatch(s.totalElapsedMs), style = KText.mono(40.sp).copy(color = K.TealHi))
+        Text(stopwatch(u.totalSeconds * 1000), style = KText.mono(40.sp).copy(color = K.TealHi))
         BigButton("CLOSE", onClose, Modifier.fillMaxWidth(), height = 72.dp, textSize = 20.sp)
     }
+}
+
+/** Same mapping as [liveUi], for the first frame before the flow emits. */
+private fun liveUi0(s: SessionState?): LiveUi? = s?.let {
+    if (it.phase == Phase.FINISHED) LiveUi(true, null, it.workoutName, it.totalElapsedMs / 1000)
+    else LiveUi(false, liveModel(it), it.workoutName, 0)
 }

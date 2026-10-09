@@ -10,9 +10,13 @@ import java.io.File
 
 /**
  * Keeps the whole library in one JSON file. Writes are atomic (temp file + rename).
- * An unreadable file is kept as workouts.bad.json and replaced by the seed data.
+ * An unreadable file is kept as workouts.bad-<time>.json and replaced by the seed data.
  */
-class WorkoutStore(private val dir: File, private val seed: () -> Library = Seed::library) {
+class WorkoutStore(
+    private val dir: File,
+    private val clock: () -> Long = System::currentTimeMillis,
+    private val seed: () -> Library = Seed::library,
+) {
     private val file = File(dir, "workouts.json")
 
     var recoveredFromCorruption = false
@@ -38,9 +42,8 @@ class WorkoutStore(private val dir: File, private val seed: () -> Library = Seed
         return try {
             json.decodeFromString(Library.serializer(), file.readText())
         } catch (e: Exception) {
-            val bad = File(dir, "workouts.bad.json")
-            bad.delete()
-            file.renameTo(bad)
+            // Timestamped, so an earlier backup is never overwritten.
+            file.renameTo(File(dir, "workouts.bad-${clock()}.json"))
             recoveredFromCorruption = true
             seed().also(::write)
         }

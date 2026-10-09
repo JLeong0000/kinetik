@@ -7,6 +7,9 @@ import dev.kinetik.session.Phase
 import dev.kinetik.session.SessionState
 import dev.kinetik.session.countdown
 import dev.kinetik.session.stopwatch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 enum class RowStatus { DONE, NOW, NEXT }
 
@@ -90,7 +93,8 @@ fun liveModel(s: SessionState): LiveModel {
             if (work != null && work.repeatCount > 1) add("Set ${work.repeat + 1} of ${work.repeatCount}")
         },
         beepZone = restStep != null && s.restRemainingMs <= 5_000,
-        restFraction = restStep?.let { s.restRemainingMs / (it.seconds * 1000f) } ?: 0f,
+        // Whole seconds, so the model (and the screen) only changes once a second.
+        restFraction = restStep?.let { ((s.restRemainingMs + 999) / 1000) / it.seconds.toFloat() } ?: 0f,
         segments = slots.size,
         activeSegment = work?.let { slots.indexOf(it.slot) } ?: -1,
         nextName = next?.name,
@@ -100,3 +104,14 @@ fun liveModel(s: SessionState): LiveModel {
         queue = queue,
     )
 }
+
+/** What the live screen shows; [model] is null once finished. */
+data class LiveUi(val finished: Boolean, val model: LiveModel?, val workoutName: String, val totalSeconds: Long)
+
+/** The live screen's state over time: a new value only when something visible changes (about once a second). */
+fun liveUi(session: Flow<SessionState?>): Flow<LiveUi?> = session.map { s ->
+    s?.let {
+        if (it.phase == Phase.FINISHED) LiveUi(true, null, it.workoutName, it.totalElapsedMs / 1000)
+        else LiveUi(false, liveModel(it), it.workoutName, 0)
+    }
+}.distinctUntilChanged()

@@ -20,8 +20,11 @@ fun Workout.deleteExercise(index: Int): Workout = copy(
         .map { o -> if (o.slot != null && o.slot > index) o.copy(slot = o.slot - 1) else o },
 )
 
-fun Workout.setCircuits(n: Int): Workout =
-    copy(circuits = n, overrides = overrides.filter { it.circuit < n })
+/** Overrides past the new last circuit stay in the draft (so "+" brings them back) until [pruned] on save. */
+fun Workout.setCircuits(n: Int): Workout = copy(circuits = n)
+
+/** Drops overrides for circuits that no longer exist; applied when the editor saves. */
+fun Workout.pruned(): Workout = copy(overrides = overrides.filter { it.circuit < circuits })
 
 fun Workout.upsertOverride(o: CircuitOverride): Workout {
     val i = overrides.indexOfFirst { it.id == o.id }

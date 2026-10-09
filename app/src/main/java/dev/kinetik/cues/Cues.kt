@@ -14,11 +14,10 @@ sealed interface Cue {
 }
 
 fun announce(p: PlannedSet): String = buildString {
-    append(p.name)
     when (p.kind) {
-        ExerciseKind.REPS -> append(", ${p.reps}")
-        ExerciseKind.MAX_REPS -> append(", max")
-        ExerciseKind.MAX_TIME -> append(", max time")
+        ExerciseKind.REPS -> append("${p.name}, ${p.reps}")
+        ExerciseKind.MAX_REPS -> append("Max ${p.name}")
+        ExerciseKind.MAX_TIME -> append("Max time ${p.name}")
     }
     if (p.repeatCount > 1) append(", set ${p.repeat + 1} of ${p.repeatCount}")
 }

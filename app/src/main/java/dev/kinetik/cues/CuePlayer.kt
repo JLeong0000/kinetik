@@ -69,10 +69,22 @@ class CuePlayer(context: Context) : TextToSpeech.OnInitListener {
         if (cue is Cue.Speak && (!voiceOn || !_voiceReady.value)) return
         if (!takeFocus()) return
         when (cue) {
-            is Cue.Speak -> tts.speak(cue.text, TextToSpeech.QUEUE_FLUSH, null, cue.text)
-            Cue.ShortBeep -> { beeper.play(false); releaseFocusSoon(450) }
+            is Cue.Speak -> {
+                // No onDone/onError callback comes after a failed speak, so release focus here or music stays ducked.
+                if (tts.speak(cue.text, TextToSpeech.QUEUE_FLUSH, null, cue.text) == TextToSpeech.ERROR) releaseFocusSoon(0)
+            }
+            // Held a little over a second, so the next countdown beep re-takes focus before it's released:
+            // music dips once for the whole 5…1 countdown instead of pumping on every beep.
+            Cue.ShortBeep -> { beeper.play(false); releaseFocusSoon(1_200) }
             Cue.LongBeep -> { beeper.play(true); releaseFocusSoon(900) }
         }
+    }
+
+    /** Drops anything queued or speaking (e.g. after End) and gives audio focus back. */
+    fun stop() {
+        main.removeCallbacksAndMessages(null)
+        tts.stop()
+        audio.abandonAudioFocusRequest(focus)
     }
 
     private fun takeFocus(): Boolean {

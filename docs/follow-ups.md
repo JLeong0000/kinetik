@@ -1,27 +1,33 @@
 # Follow-ups
 
-Small issues found in the two code reviews and deliberately left for later (2026-10-09).
+## Done (2026-10-09)
 
-- audio focus may stay held if tts.speak returns ERROR (check return, release focus).
-- AudioTrack built per beep without try/catch; prebuilt static tracks would be safer and lower-latency.
-- queued cues still play after End (add CuePlayer.stop()).
-- corruption recovery overwrites a previous workouts.bad.json.
-- voice wording "Dips, max" / "each side" differs from spec examples "Max dips" / "each leg".
-- lowering circuits in the editor drops overrides immediately (draft only; Discard recovers).
-- editor draft not rememberSaveable (lost on uiMode/locale change or process death).
-- Live screen recomposes every 100 ms tick (could map to LiveModel + distinctUntilChanged).
-- music ducks/unducks for each of the 5 countdown beeps.
-- keep-screen-on still active on the Finished screen.
-- on the last set DONE shifts up (no up-next strip in the centred group).
-- media-button routing to Kinetik on set 1 depends on Android's last-playing-app choice — verify on device.
-- "This circuit" label on regular workouts (main-screen live).
-- set rest shown for 1-set exercises in setsLabel.
-- widget stays on "Workout complete" until the app's CLOSE.
-- widget Start while editor open drops unsaved edits without prompt.
-- BlockCard state not keyed by block id.
-- widget frozen on live controls after process death until tapped.
-- tick loop runs for an empty plan.
+Every small issue deferred from the two code reviews has been fixed:
+
+- **Audio**
+  - Cues stop when you tap End.
+  - A failed voice call releases audio focus.
+  - Beeps replay two prebuilt tracks, and audio errors can't crash a workout.
+  - Music ducks once for the whole 5…1 countdown.
+- **Voice:** "Max Dips" and "Max time Pull up negatives".
+- **Widget**
+  - Offers Start for the next workout after "Workout complete".
+  - Refreshes at least every 30 minutes, so it can't stay frozen after the app is killed.
+  - Starting from it while editing returns you to the editor with your draft intact.
+- **Editor**
+  - Lowering the circuit count keeps overrides until you save, so "+" brings them back.
+  - Unsaved drafts survive activity recreation and process death.
+  - Block cards are keyed by block.
+- **Live screen**
+  - Recomposes about once a second instead of every tick.
+  - Says "This block" on regular workouts.
+  - A "Last set" strip keeps DONE in place.
+  - Keep-screen-on is off on the Finished screen.
+- **Other**
+  - A 1-set exercise shows no set rest.
+  - Corrupt-file backups are timestamped, so earlier backups are never overwritten.
+  - The tick loop doesn't run for an empty plan.
 
 ## To check on the device
 
-- Earbud play/pause during a workout with Spotify playing should still control the music (Kinetik's media session has no play/pause actions). If presses are swallowed, replace the media-style notification with a plain public notification with action buttons.
+- With Spotify playing during a workout, earbud play/pause should still control the music (Kinetik's media session has no play/pause actions). If presses are swallowed, replace the media-style notification with a plain public notification with action buttons.

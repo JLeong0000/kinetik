@@ -33,7 +33,9 @@ class WorkoutStoreTest {
         File(dir, "workouts.json").writeText("{ not json")
         val store = WorkoutStore(dir)
         assertTrue(store.recoveredFromCorruption)
-        assertEquals("{ not json", File(dir, "workouts.bad.json").readText())
+        val backups = dir.listFiles { f -> f.name.startsWith("workouts.bad-") }!!
+        assertEquals(1, backups.size)
+        assertEquals("{ not json", backups[0].readText())
         assertEquals(4, store.library.value.allWorkouts().size)
         store.clearRecoveredFlag()
         assertFalse(store.recoveredFromCorruption)
@@ -50,5 +52,15 @@ class WorkoutStoreTest {
     @Test fun seedHelperIsUsed() {
         val store = WorkoutStore(tmp.newFolder()) { Seed.library().copy(lastCompletedWorkoutId = "x") }
         assertEquals("x", store.library.value.lastCompletedWorkoutId)
+    }
+
+    @Test fun aSecondCorruptionKeepsTheFirstBackup() {
+        val dir = tmp.newFolder()
+        File(dir, "workouts.json").writeText("first")
+        WorkoutStore(dir, clock = { 1L })
+        File(dir, "workouts.json").writeText("second")
+        WorkoutStore(dir, clock = { 2L })
+        val backups = dir.listFiles { f -> f.name.startsWith("workouts.bad-") }!!.map { it.readText() }.sorted()
+        assertEquals(listOf("first", "second"), backups)
     }
 }

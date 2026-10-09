@@ -34,6 +34,7 @@ class SessionController(
         loop?.cancel()
         apply(null, null, SessionState.start(w))
         WorkoutService.start(context)
+        if (_state.value?.phase == Phase.FINISHED) return // empty plan: nothing to tick
         loop = scope.launch {
             var last = SystemClock.elapsedRealtime()
             while (isActive) {
@@ -58,6 +59,7 @@ class SessionController(
 
     fun stop() {
         loop?.cancel()
+        cues.stop()
         _state.value = null
         WorkoutService.stop(context)
     }
