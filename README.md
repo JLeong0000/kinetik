@@ -21,6 +21,7 @@ echo "sdk.dir=$HOME/Library/Android/sdk" > local.properties
 
 ## Docs
 
+- **Start here:** `ARCHITECTURE.md`. It maps every file, the runtime flow, the invariants and the gotchas.
 - Design spec: `docs/superpowers/specs/2026-10-09-kinetik-design.md`
 - Implementation plan: `docs/superpowers/plans/2026-10-09-kinetik.md`
 - Mockup: `docs/design/mockup.html`
