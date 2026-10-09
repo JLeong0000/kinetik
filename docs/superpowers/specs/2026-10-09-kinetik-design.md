@@ -42,7 +42,7 @@ Reps for exercise *e* in circuit *c* (0-based) = `max(1, startReps(e) − c × d
 | **Max reps** | `MAX` | No target. Optional **max break** (e.g. 10 s): a BREAK button starts that countdown with beeps, and you tap again to continue. Tap DONE when finished. |
 | **Max time** | `MAX TIME` | A stopwatch counts up from when the set starts. Tap DONE to stop it. Nothing is saved. |
 
-Optional modifiers on any exercise: **weight** (e.g. 10 kg, display only), **each side** (shown as "each leg"/"each side", spoken the same way) and **sets** (e.g. ×4: the exercise is repeated that many times back to back with **no rest between repeats**. Tap DONE after each one, and the next starts at once and is announced. The normal between-exercise rest follows the last repeat).
+Optional modifiers on any exercise: **weight** (e.g. 10 kg, display only) and **sets** (e.g. ×4: the exercise is repeated that many times back to back with **no rest between repeats**. Tap DONE after each one, and the next starts at once and is announced. The normal between-exercise rest follows the last repeat).
 
 ### 2.3 Overrides
 
@@ -177,3 +177,13 @@ Workout history and logging, progress charts, accounts and sync, iOS, a shared e
 ## 10. Environment
 
 Android Studio 2026.2 with its bundled JBR (Java 25), SDK platform `android-36`, build-tools 36.1.0, and platform-tools (adb) in `~/Library/Android/sdk`. adb isn't on the shell PATH yet, so builds and installs will call it by its full path or add it to PATH.
+
+## 11. Changes after the first device run (2026-10-09)
+
+- The "each side" option is removed.
+- All buttons are rectangles with rounded corners (no pills or circles). Text-field labels and placeholders are grey.
+- No glow on the exercise ring or the rest countdown ring. The rings are true circles (measured 843 × 845 px on a 1080 px screen).
+- Earbud play/pause is **not** handled by Kinetik; it stays with the music app.
+- The workout notification is a media-style card with Done / Pause / Resume / Skip, visible on the lock screen.
+- Home-screen widget (4×2, resizable): during a workout it shows circuit x/y, the exercise and reps (or the rest countdown), with Done or Pause/Skip. When idle it shows the up-next workout with Start, which opens the app and starts it.
+- Double-tap protection: button presses within 300 ms are ignored, and within 700 ms after DONE. START only starts once. Pause only applies during rests.
