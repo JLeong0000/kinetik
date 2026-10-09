@@ -86,7 +86,7 @@ All screens use the mockup's visual language (section 6). The app picks a layout
 
 ### 4.1 Cover screen (folded, ~412 × 960 dp)
 
-- **Home:** groups with bento workout cards. The next workout gets the large card with a Start button, and each card has a segmented ring glyph (one segment per circuit). A "+" card adds a workout. Long-press a card to rename, move or delete it, or drag to reorder.
+- **Home:** groups with bento workout cards. The next workout gets the large card with a Start button, and each card has a segmented ring glyph (one segment per circuit). A "+" card adds a workout. Long-press a card for a menu: edit, rename, move earlier or later, move to another group, delete. Groups have their own menu.
 - **Edit workout:** an editable title, three rule tiles (drop, exercise rest, circuit rest) and the exercise list. Each exercise row shows its start reps, name and tags, and can be dragged to reorder (it lifts with a shadow, level, with no tilt). Below is the **circuit plan grid**, which updates as you edit and shows overrides striped. "+ Override" opens an override editor.
 - **Live (exercise and rest):** everything sits in a tight group at the vertical centre: the header (circuit x/y, workout, time left), the circuit progress bars, the ring, then the up-next strip and DONE (or the rest controls).
 
@@ -118,9 +118,9 @@ Voice on/off, beep volume, keep screen on during workouts (default on), and rese
 | `plan` | A pure function `buildPlan(workout): List<Step>` that expands rules and overrides into an ordered list of `Set` and `Rest` steps. It's also used to draw the plan grid and estimate total time. | `model` |
 | `store` | Loads and saves all groups and workouts as one JSON file (kotlinx.serialization, atomic write), seeds on first launch and exposes a `StateFlow`. | `model` |
 | `session` | `SessionEngine`: a state machine over the step list (start, done, tick, pause, −30 s, skip, break) with an injected clock. It emits a `SessionState` and has no Android dependencies. | `plan` |
-| `cues` | Turns state changes into speech (Android `TextToSpeech`) and beeps (`SoundPool` with bundled beep sounds). It handles audio focus with ducking. | `session` |
+| `cues` | Turns state changes into speech (Android `TextToSpeech`) and beeps (sine tones generated in code and played with `AudioTrack`, so no sound files). It handles audio focus with ducking. | `session` |
 | `service` | `WorkoutService`: a foreground service that owns the engine and cues, posts the notification and handles the media button. | `session`, `cues` |
-| `ui` | Compose screens plus the theme. Layout is chosen from the window size class and the fold posture (Jetpack WindowManager `FoldingFeature`). | everything above via ViewModels |
+| `ui` | Compose screens plus the theme. Layout is chosen from the window size class and the fold posture (Jetpack WindowManager `FoldingFeature`). | everything above (screens read the store and the session controller directly; no ViewModels) |
 
 Why JSON rather than a database: the data is small, nested and edited as a whole. A single file keeps the store very simple, and the `store` interface lets it switch to Room later if history is ever added.
 
