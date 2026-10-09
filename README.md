@@ -27,4 +27,6 @@ echo "sdk.dir=$HOME/Library/Android/sdk" > local.properties
 - Mockup: `docs/design/mockup.html`
 - Follow-ups: `docs/follow-ups.md`
 
-Fonts (Archivo, Manrope, JetBrains Mono) are under the SIL Open Font License; see `docs/licenses/`.
+## License
+
+Code: MIT, see `LICENSE`. Fonts (Archivo, Manrope, JetBrains Mono) are under the SIL Open Font License; see `docs/licenses/`.
