@@ -58,6 +58,7 @@ import dev.kinetik.ui.components.Label
 import dev.kinetik.ui.components.ProgressBars
 import dev.kinetik.ui.components.RestRing
 import dev.kinetik.ui.components.SegmentedRing
+import dev.kinetik.ui.components.ringBox
 import dev.kinetik.ui.components.Tag
 import dev.kinetik.ui.theme.K
 import dev.kinetik.ui.theme.KText
@@ -134,7 +135,7 @@ private fun LiveCover(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: 
     ) {
         LiveHeader(m, onEnd)
         ProgressBars(m.circuits, m.circuitNumber - 1)
-        RingBlock(m, Modifier.size(340.dp), stroke = 18.dp, bigSize = 116.sp, nameSize = 24.sp)
+        RingBlock(m, Modifier.ringBox(340.dp), stroke = 18.dp, bigSize = 116.sp, nameSize = 24.sp)
         if (voiceMissing) Tag("Voice unavailable")
         if (m.isRest) {
             NextStrip(m, "Up next", dim = false)
@@ -161,7 +162,7 @@ private fun LiveMain(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: B
                 }
                 Text("End", Modifier.clickable(onClick = onEnd).padding(8.dp), style = KText.body.copy(color = K.Muted))
             }
-            RingBlock(m, Modifier.size(400.dp), stroke = 20.dp, bigSize = 150.sp, nameSize = 28.sp)
+            RingBlock(m, Modifier.ringBox(400.dp), stroke = 20.dp, bigSize = 150.sp, nameSize = 28.sp)
             if (voiceMissing) Tag("Voice unavailable")
         }
         Column(Modifier.weight(1f).fillMaxHeight().padding(22.dp)) {
@@ -209,7 +210,7 @@ private fun LiveTabletop(m: LiveModel, send: (SessionEvent) -> Unit, onEnd: () -
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(28.dp),
         ) {
-            RingBlock(m, Modifier.size(300.dp), stroke = 16.dp, bigSize = 100.sp, nameSize = 20.sp)
+            RingBlock(m, Modifier.ringBox(300.dp), stroke = 16.dp, bigSize = 100.sp, nameSize = 20.sp)
             Column(Modifier.weight(1f)) {
                 Label("${m.workoutName} · Circuit ${m.circuitNumber}/${m.circuits} · ${m.sub}")
                 if (m.nextName != null) {

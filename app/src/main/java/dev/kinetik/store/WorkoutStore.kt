@@ -29,8 +29,6 @@ class WorkoutStore(private val dir: File, private val seed: () -> Library = Seed
         _library.value = next
     }
 
-    fun resetToSeed() = update { seed().copy(settings = it.settings) }
-
     fun clearRecoveredFlag() {
         recoveredFromCorruption = false
     }

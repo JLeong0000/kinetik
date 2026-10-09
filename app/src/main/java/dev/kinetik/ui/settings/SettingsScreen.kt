@@ -47,7 +47,6 @@ fun SettingsScreen(onBack: () -> Unit) {
     val s = lib.settings
     fun set(t: (Settings) -> Settings) = app.store.update { it.copy(settings = t(it.settings)) }
     var volume by remember { mutableFloatStateOf(s.beepVolume / 100f) }
-    var confirmReset by remember { mutableStateOf(false) }
 
     Column(
         Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -69,20 +68,6 @@ fun SettingsScreen(onBack: () -> Unit) {
             BigButton("Test beep", { app.cues.play(listOf(Cue.ShortBeep, Cue.LongBeep)) }, Modifier.padding(top = 8.dp), primary = false, height = 48.dp, textSize = 14.sp)
         }
         SettingCard { SwitchRow("Keep screen on during workouts", s.keepScreenOn) { v -> set { it.copy(keepScreenOn = v) } } }
-        SettingCard {
-            Text("Reset workouts", style = KText.body.copy(fontSize = 15.sp))
-            Text("Replaces every workout with the original Pull, Push, Legs and Abs plan.", style = KText.body.copy(color = K.Muted, fontSize = 13.sp))
-            BigButton("Reset", { confirmReset = true }, Modifier.fillMaxWidth().padding(top = 8.dp), primary = false, height = 52.dp, textSize = 15.sp)
-        }
-    }
-    if (confirmReset) {
-        AlertDialog(
-            onDismissRequest = { confirmReset = false },
-            title = { Text("Reset all workouts?") },
-            text = { Text("Your edits will be lost.") },
-            confirmButton = { TextButton({ confirmReset = false; app.store.resetToSeed() }) { Text("Reset") } },
-            dismissButton = { TextButton({ confirmReset = false }) { Text("Cancel") } },
-        )
     }
 }
 

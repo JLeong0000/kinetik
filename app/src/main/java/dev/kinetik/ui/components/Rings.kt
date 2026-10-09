@@ -3,6 +3,8 @@ package dev.kinetik.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -49,4 +51,11 @@ fun RestRing(fraction: Float, modifier: Modifier, stroke: Dp) {
             ring(K.Rest, -90f, sweep, w)
         }
     }
+}
+
+/** A square of side min([max], available width, available height), so a ring always stays a circle. */
+fun Modifier.ringBox(max: Dp): Modifier = layout { measurable, constraints ->
+    val side = minOf(max.roundToPx(), constraints.maxWidth, constraints.maxHeight)
+    val placeable = measurable.measure(Constraints.fixed(side, side))
+    layout(side, side) { placeable.place(0, 0) }
 }

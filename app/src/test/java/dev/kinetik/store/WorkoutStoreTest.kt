@@ -47,15 +47,6 @@ class WorkoutStoreTest {
         assertEquals(0, store.library.value.groups.size)
     }
 
-    @Test fun resetToSeedKeepsSettings() {
-        val dir = tmp.newFolder()
-        val store = WorkoutStore(dir)
-        store.update { it.copy(groups = emptyList(), settings = Settings(beepVolume = 10)) }
-        store.resetToSeed()
-        assertEquals(4, store.library.value.allWorkouts().size)
-        assertEquals(10, store.library.value.settings.beepVolume)
-    }
-
     @Test fun seedHelperIsUsed() {
         val store = WorkoutStore(tmp.newFolder()) { Seed.library().copy(lastCompletedWorkoutId = "x") }
         assertEquals("x", store.library.value.lastCompletedWorkoutId)
