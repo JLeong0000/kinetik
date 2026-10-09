@@ -33,10 +33,17 @@ fun notificationText(s: SessionState): Pair<String, String> {
     val title = "${s.workoutName} · ${s.section} ${s.circuit + 1}/${s.circuits}"
     val body = when (val step = s.step) {
         is Step.Work -> setLabel(step.set)
-        is Step.Rest -> "Rest ${countdown(s.restRemainingMs)}" + (s.nextWork()?.let { " · next ${it.name}" } ?: "")
+        // No countdown here: changing text re-posts the notification, which made the status-bar chip jump every second.
+        is Step.Rest -> "Rest" + (s.nextWork()?.let { " · next ${it.name}" } ?: "")
         null -> ""
     }
     return title to if (s.phase == Phase.PAUSED) "Paused · $body" else body
+}
+
+/** (elapsed, total) ms of the current rest, for the lock-screen card's progress bar; null during a set. */
+fun restProgress(s: SessionState): Pair<Long, Long>? {
+    val total = restMs(s.step).takeIf { it > 0 } ?: return null
+    return total - s.restRemainingMs to total
 }
 
 /** Buttons on the lock-screen card. Earbud play/pause is left to the music app. */

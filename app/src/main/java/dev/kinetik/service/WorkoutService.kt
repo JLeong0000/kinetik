@@ -11,6 +11,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.os.SystemClock
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
@@ -26,6 +27,7 @@ import dev.kinetik.session.Phase
 import dev.kinetik.session.SessionState
 import dev.kinetik.session.controlsFor
 import dev.kinetik.session.notificationText
+import dev.kinetik.session.restProgress
 import dev.kinetik.session.serviceShouldRun
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -40,7 +42,9 @@ class WorkoutService : Service() {
     private val scope = MainScope()
     private lateinit var media: MediaSessionCompat
     private lateinit var wake: PowerManager.WakeLock
-    private var lastShown: List<String>? = null
+    private var lastShown: List<Any?>? = null
+    /** A fixed timestamp, so re-posts don't move the notification or its status-bar chip. */
+    private val postedAt = System.currentTimeMillis()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -89,24 +93,30 @@ class WorkoutService : Service() {
         super.onDestroy()
     }
 
-    /** Re-posts only when the visible text or buttons change (about once a second), not on every 100 ms tick. */
+    /**
+     * Re-posts only when the step, pause state, buttons or rest length (−30 s) change, never as time passes:
+     * the card's progress bar runs the rest countdown by itself, so the status-bar chip stays put.
+     */
     private fun show(s: SessionState) {
         val (title, body) = notificationText(s)
         val controls = controlsFor(s)
-        val key = listOf(title, body) + controls.map { it.name }
+        val progress = restProgress(s)
+        // Elapsed rest minus time in the step stays constant as time passes and jumps only on −30 s.
+        val key = listOf(title, body, progress?.first?.minus(s.stepElapsedMs)) + controls.map { it.name }
         if (key == lastShown) return
         lastShown = key
         media.setMetadata(
             MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, body)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, title)
+                .apply { progress?.let { putLong(MediaMetadataCompat.METADATA_KEY_DURATION, it.second) } }
                 .build(),
         )
         media.setPlaybackState(
             PlaybackStateCompat.Builder()
                 .setState(
                     if (s.phase == Phase.PAUSED) PlaybackStateCompat.STATE_PAUSED else PlaybackStateCompat.STATE_PLAYING,
-                    PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f,
+                    progress?.first ?: PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f, SystemClock.elapsedRealtime(),
                 )
                 .apply { controls.forEach { addCustomAction(it.name, it.label, icon(it)) } }
                 .build(),
@@ -127,6 +137,7 @@ class WorkoutService : Service() {
             .setContentTitle(body)
             .setContentText(title)
             .setOngoing(true)
+            .setWhen(postedAt)
             .setOnlyAlertOnce(true)
             .setSilent(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

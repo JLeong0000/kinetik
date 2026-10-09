@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.speech.tts.Voice
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +35,18 @@ class CuePlayer(context: Context) : TextToSpeech.OnInitListener {
     private val _voiceReady = MutableStateFlow(false)
     val voiceReady: StateFlow<Boolean> = _voiceReady.asStateFlow()
 
+    private val _voices = MutableStateFlow<List<Voice>>(emptyList())
+    /** The installed [VOICE_LABELS] voices, in display order, for the settings picker. */
+    val voices: StateFlow<List<Voice>> = _voices.asStateFlow()
+
     var voiceOn = true
+
+    /** The saved voice name; see [chosenVoice] for what's used when it's null or not offered. */
+    var voiceName: String? = null
+        set(value) {
+            field = value
+            applyVoice()
+        }
 
     /** 0..100 */
     var beepVolume = 80
@@ -48,12 +60,22 @@ class CuePlayer(context: Context) : TextToSpeech.OnInitListener {
         tts.setAudioAttributes(attrs)
         val lang = tts.setLanguage(Locale.getDefault())
         _voiceReady.value = lang >= TextToSpeech.LANG_AVAILABLE
+        val installed = tts.voices.orEmpty().filter { TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features }.associateBy { it.name }
+        _voices.value = offeredVoices(installed.keys.toList()).map { installed.getValue(it) }
+        applyVoice()
         tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String?) = Unit
             override fun onDone(utteranceId: String?) = releaseFocusSoon(300)
             @Deprecated("Deprecated in Java")
             override fun onError(utteranceId: String?) = releaseFocusSoon(0)
         })
+    }
+
+    private fun applyVoice() {
+        if (!_voiceReady.value) return
+        val name = chosenVoice(voiceName, _voices.value.map { it.name })
+        // None of the four installed: keep whatever the engine picked for the language.
+        _voices.value.firstOrNull { it.name == name }?.let { tts.voice = it }
     }
 
     /** Plays cues in order. Speech after a long beep waits for the beep to finish. */

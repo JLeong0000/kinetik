@@ -39,6 +39,7 @@ class KinetikApp : Application() {
         scope.launch {
             store.library.collect {
                 cues.voiceOn = it.settings.voiceOn
+                cues.voiceName = it.settings.voiceName
                 cues.beepVolume = it.settings.beepVolume
             }
         }

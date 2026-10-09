@@ -201,3 +201,11 @@ A workout is either **Circuit** (everything above) or **Regular**, chosen when i
 - **Storage:** `Workout.type` (default CIRCUIT), `blocks`, `setRestSec`, and `Exercise.restSec` — all with defaults, so saved circuit workouts load unchanged.
 
 Widget text and buttons are slightly larger (full: 40 sp number, 52 dp buttons; 4×1: 28 sp number, 44 dp buttons).
+
+## 13. Live-screen and settings additions (2026-10-10)
+
+- **Status-bar chip:** the notification no longer counts down in its text. Re-posting it every second made One UI's media chip restart its scrolling title. It now says "Rest · next Chin ups", and the media card's progress bar runs the rest by itself (duration + position). It re-posts only on a step change, pause/resume or −30 s, with a fixed timestamp.
+- **Count-up:** every set, MAX-time included, shows a small ⏱ stopwatch under the exercise. It starts when the set appears, so it shows a late start as well as how long the set took.
+- **Jumping:** tapping a circuit bar above the ring (cover, tabletop) or a circuit tile (main screen) asks "Jump to circuit n?". Tapping a section of the exercise ring during a set asks "Jump to <exercise>?". Confirming goes to the first set of that circuit or exercise. Tapping the current one does nothing. Circuit bars are 44 dp long (shrinking to fit), with a taller touch area.
+- **Voice:** Settings → Voice offers British Male, British Female, US Male and US Female (Google TTS `en-gb-x-gbb-local`, `en-gb-x-gbg-local`, `en-us-x-iol-local`, `en-us-x-tpf-local`). Picking one plays a sample. There's no phone-default option: with nothing saved, the first installed one is used. Stored as `Settings.voiceName` (default null).
+- **Home title:** "KINETIK" in the display font, as a teal outline.

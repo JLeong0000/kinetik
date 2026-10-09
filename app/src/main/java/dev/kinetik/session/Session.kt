@@ -65,6 +65,8 @@ sealed interface SessionEvent {
     data object MinusThirty : SessionEvent
     data object Skip : SessionEvent
     data object ToggleBreak : SessionEvent
+    /** Go to the first set of [circuit]'s [exercise] (both 0-based; exercise as in "Ex n of m"), forwards or back. */
+    data class JumpTo(val circuit: Int, val exercise: Int = 0) : SessionEvent
 }
 
 fun reduce(s: SessionState, e: SessionEvent): SessionState {
@@ -83,6 +85,12 @@ fun reduce(s: SessionState, e: SessionEvent): SessionState {
         SessionEvent.ToggleBreak -> {
             val seconds = s.work?.maxBreakSec ?: return s
             s.copy(breakRemainingMs = if (s.breakRemainingMs == null) seconds * 1000L else null)
+        }
+        is SessionEvent.JumpTo -> {
+            val sets = s.steps.withIndex().filter { (_, st) -> st is Step.Work && st.set.circuit == e.circuit }
+            val slot = sets.map { (it.value as Step.Work).set.slot }.distinct().getOrNull(e.exercise) ?: return s
+            val i = sets.first { (it.value as Step.Work).set.slot == slot }.index
+            if (i == s.index) s else s.copy(index = i - 1).let(::advance)
         }
     }
 }

@@ -75,6 +75,8 @@ data class Settings(
     val voiceOn: Boolean = true,
     val beepVolume: Int = 80,
     val keepScreenOn: Boolean = true,
+    /** A TextToSpeech voice name from `VOICE_LABELS`; null means the first one installed. */
+    val voiceName: String? = null,
 )
 
 @Serializable

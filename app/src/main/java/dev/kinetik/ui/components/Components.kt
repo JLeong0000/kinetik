@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Switch
@@ -90,9 +90,9 @@ fun BigButton(
     }
 }
 
-/** One bar per circuit: done = dim teal, current = teal with glow, upcoming = grey. */
+/** One bar per circuit: done = dim teal, current = teal with glow, upcoming = grey. With [onTap], each bar gets a taller touch target. */
 @Composable
-fun ProgressBars(count: Int, current: Int, modifier: Modifier = Modifier) {
+fun ProgressBars(count: Int, current: Int, modifier: Modifier = Modifier, onTap: ((Int) -> Unit)? = null) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(count) { i ->
             val color = when {
@@ -102,7 +102,12 @@ fun ProgressBars(count: Int, current: Int, modifier: Modifier = Modifier) {
             }
             Box(
                 Modifier
-                    .size(26.dp, 6.dp)
+                    // 44 dp each, shrinking evenly when many circuits wouldn't fit the cover screen.
+                    .weight(1f, fill = false)
+                    .widthIn(max = 44.dp)
+                    .fillMaxWidth()
+                    .then(if (onTap != null) Modifier.clickable { onTap(i) }.padding(vertical = 14.dp) else Modifier)
+                    .height(6.dp)
                     .then(if (i == current) Modifier.drawBehind { drawRoundRect(K.Teal.copy(alpha = 0.35f), topLeft = Offset(-3f, -3f), size = size.copy(size.width + 6f, size.height + 6f), cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f)) } else Modifier)
                     .clip(RoundedCornerShape(3.dp))
                     .background(color),

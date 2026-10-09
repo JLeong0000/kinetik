@@ -13,6 +13,20 @@ sealed interface Cue {
     data object LongBeep : Cue
 }
 
+/** The voices offered in Settings, in display order, with the names shown for them. */
+val VOICE_LABELS = linkedMapOf(
+    "en-gb-x-gbb-local" to "British Male",
+    "en-gb-x-gbg-local" to "British Female",
+    "en-us-x-iol-local" to "US Male",
+    "en-us-x-tpf-local" to "US Female",
+)
+
+/** Which of [VOICE_LABELS] are installed, in display order. */
+fun offeredVoices(installed: List<String>): List<String> = VOICE_LABELS.keys.filter { it in installed }
+
+/** The saved voice if it's offered, otherwise the first offered one (there is no "phone default" option). */
+fun chosenVoice(saved: String?, offered: List<String>): String? = saved?.takeIf { it in offered } ?: offered.firstOrNull()
+
 fun announce(p: PlannedSet): String = buildString {
     when (p.kind) {
         ExerciseKind.REPS -> append("${p.name}, ${p.reps}")

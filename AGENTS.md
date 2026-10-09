@@ -15,7 +15,7 @@ Personal Android workout timer (Kotlin + Jetpack Compose) for a Galaxy Z Fold8 U
   - size rings without `ringBox()` (the cover screen is 360 dp);
   - feed the widget anything but `app.widget`.
 - **Design rules:** flat rounded-rectangle buttons, no glow on buttons or rings, teal `#14B8A6` / amber `#F2B544`, Archivo Expanded for display text.
-- **Records:** spec in `docs/superpowers/specs/` (§11–12 cover post-launch changes); deferred work in `docs/follow-ups.md`.
+- **Records:** spec in `docs/superpowers/specs/` (§11–13 cover post-launch changes); deferred work in `docs/follow-ups.md`.
 
 ## General guidelines
 

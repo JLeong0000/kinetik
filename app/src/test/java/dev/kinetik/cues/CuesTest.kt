@@ -25,6 +25,25 @@ class CuesTest {
         return n to cuesFor(s, e, n)
     }
 
+    @Test fun voicePickerOffersTheChosenFourInOrder() {
+        val installed = listOf("en-us-x-tpf-local", "en-gb-x-gba-local", "en-gb-x-gbg-local", "en-us-x-iol-local", "en-us-x-tpf-network")
+        assertEquals(listOf("en-gb-x-gbg-local", "en-us-x-iol-local", "en-us-x-tpf-local"), offeredVoices(installed))
+        assertEquals("British Male", VOICE_LABELS["en-gb-x-gbb-local"])
+    }
+
+    @Test fun noSavedVoiceMeansTheFirstOffered() {
+        val offered = listOf("en-gb-x-gbb-local", "en-us-x-tpf-local")
+        assertEquals("en-gb-x-gbb-local", chosenVoice(null, offered))
+        assertEquals("en-us-x-tpf-local", chosenVoice("en-us-x-tpf-local", offered))
+        assertEquals("en-gb-x-gbb-local", chosenVoice("en-gb-x-gbg-local", offered))
+        assertEquals(null, chosenVoice(null, emptyList()))
+    }
+
+    @Test fun jumpAnnouncesTheNewSet() {
+        val (_, cues) = step(SessionState.start(Seed.pull()), SessionEvent.JumpTo(2))
+        assertEquals(listOf(Cue.Speak("Pull ups, 4")), cues)
+    }
+
     @Test fun announcements() {
         val push = buildPlan(Seed.push())
         val legs = buildPlan(Seed.legs())

@@ -11,7 +11,7 @@ Read this first. It's the map; the code is small (~3.6k lines of main source).
 | What | Command / value |
 |---|---|
 | Debug build | `./gradlew :app:assembleDebug` → `app/build/outputs/apk/debug/app-debug.apk` |
-| Unit tests (JVM, ~91) | `./gradlew :app:testDebugUnitTest` |
+| Unit tests (JVM, ~105) | `./gradlew :app:testDebugUnitTest` |
 | On-device tests | `./gradlew :app:connectedDebugAndroidTest`. With two devices attached, set `ANDROID_SERIAL`. Note: this **uninstalls the app afterwards**. |
 | adb | `~/Library/Android/sdk/platform-tools/adb`. It's not on PATH. Always pass `-s <serial>` when the phone and the emulator are both attached. |
 | Emulator | AVD `Pixel_9` (412 dp wide, so **wider than the Fold cover**). To simulate the main screen: `wm size 2256x2504 && wm density 378`. |
@@ -52,12 +52,12 @@ ui/* Compose screens read StateFlows from KinetikApp; no ViewModels.
 | `model/Seed.kt` | The owner's Pull / Push / Legs / Abs plan, written on first launch. |
 | `plan/Plan.kt` | `buildPlan(w): List<Step>`, where a step is `Work(PlannedSet)` or `Rest(seconds, kind, circuit)`. Circuit: reps = max(1, start − c·drop); overrides apply; repeats run back to back. Regular: block by block, straight sets, set rest = `setRestSec ?: e.restSec`, then the exercise rest. Rests of 0 s and the trailing rest are dropped. Also `estimateSeconds` (45 s per set). |
 | `plan/PlanGrid.kt` | Columns and cells for the circuit plan grid (Reps / Max / Swapped / whole-circuit label). |
-| `session/Session.kt` | `SessionState` and `reduce(state, event)`, the **pure state machine**. Events: Tick(ms), Done, TogglePause (rests only), MinusThirty, Skip, ToggleBreak. `advance()` never moves more than one step and always resumes. `section` is "Circuit" or "Block". |
-| `session/Format.kt` | `countdown` (rounds up) / `stopwatch`, `notificationText`, `Control` + `controlsFor(state)` (the media-card and widget buttons), `serviceShouldRun`, `canStart` (no session, or the last one finished). |
+| `session/Session.kt` | `SessionState` and `reduce(state, event)`, the **pure state machine**. Events: Tick(ms), Done, TogglePause (rests only), MinusThirty, Skip, ToggleBreak, JumpTo(circuit, exercise = 0) (first set of that exercise; tapping a circuit pill or a ring segment asks first, ring hits via `ringSegmentAt`). `advance()` never moves more than one step and always resumes. `section` is "Circuit" or "Block". |
+| `session/Format.kt` | `countdown` (rounds up) / `stopwatch`, `notificationText` (no ticking countdown; see Gotchas), `restProgress`, `Control` + `controlsFor(state)` (the media-card and widget buttons), `serviceShouldRun`, `canStart` (no session, or the last one finished). |
 | `session/PressGate.kt` | Drops button presses within 300 ms of the last accepted one, or 700 ms after DONE. |
 | `session/SessionController.kt` | Owns the state and a 100 ms `elapsedRealtime` tick loop, all on the main thread. `send()` gates presses, reduces, plays cues and records completion. It starts and stops `WorkoutService`. |
 | `cues/Cues.kt` | `announce(set)` and `cuesFor(prev, event, next)`: speech on step change, short beeps at 5..1, a long beep when a rest or break ends **by tick** only. |
-| `cues/Beeper.kt`, `cues/CuePlayer.kt` | Sine beeps from two prebuilt static AudioTracks; audio errors are swallowed so they can't crash a workout. TTS. Each cue takes transient audio focus with ducking (held ~1.2 s after a short beep, so the countdown ducks once); a cue that's refused focus is dropped. Speech after a long beep waits 650 ms. `stop()` clears queued cues on End. |
+| `cues/Beeper.kt`, `cues/CuePlayer.kt` | Sine beeps from two prebuilt static AudioTracks; audio errors are swallowed so they can't crash a workout. TTS. Each cue takes transient audio focus with ducking (held ~1.2 s after a short beep, so the countdown ducks once); a cue that's refused focus is dropped. Speech after a long beep waits 650 ms. `voices` (the four in `VOICE_LABELS`, Cues.kt) / `voiceName` back the Settings voice picker (null or missing → `chosenVoice` picks the first installed). `stop()` clears queued cues on End. |
 | `service/WorkoutService.kt` | specialUse foreground service plus a 3 h partial wake lock. MediaStyle notification and a MediaSession with **custom actions only** (no play/pause, so earbuds stay with the music app). Stops itself when `serviceShouldRun` is false. |
 | `store/WorkoutStore.kt` | A single `files/workouts.json`, written atomically. A corrupt file is kept as `workouts.bad-<millis>.json` (earlier backups are never overwritten) and the seed is loaded (`recoveredFromCorruption` triggers the snackbar). |
 | `widget/WidgetModel.kt` | `widgetModel(state, library)` (live or idle up-next) and `widgetModels()`, deduped. |
@@ -69,7 +69,7 @@ ui/* Compose screens read StateFlows from KinetikApp; no ViewModels.
 | `ui/home/Groups.kt` | `expandedOnStart` (only the up-next group). |
 | `ui/editor/EditorScreen.kt` | Draft editing (`rememberSaveable` through `WorkoutCodec`, so it survives recreation). It validates and saves `draft.pruned()` (out-of-range overrides are kept in the draft until save) and has a discard prompt. Branches into circuit (rule tiles, exercise list, plan grid, overrides) or regular. |
 | `ui/editor/RegularEditor.kt`, `Fields.kt`, `Sheets.kt` | Block cards, rule tiles, `ExerciseFields` (with a `regular` flag), `StepperDialog`, and the exercise/override bottom sheets (always fully expanded). |
-| `ui/live/LiveModel.kt` | `liveModel(state)`: big text (reps / MAX / clock), tags (weight, "Set n of m"), segments, queue, next. `liveUi(flow)` is the deduped screen state (~1 Hz); the live screen collects it, never the raw session. |
+| `ui/live/LiveModel.kt` | `liveModel(state)`: big text (reps / MAX / clock), tags (weight, "Set n of m"), `elapsed` (count-up since the set appeared), segments, queue, next. `liveUi(flow)` is the deduped screen state (~1 Hz); the live screen collects it, never the raw session. |
 | `ui/live/LiveScreen.kt` | Cover (grouped around the centre) / main (ring + queue) / tabletop layouts, the finish screen, and keep-screen-on. `RingBlock` fits text inside the circle's inscribed square using BasicText autoSize. |
 | `ui/components/*` | `BigButton`, `Tag`, `Label`, `StatTile`, `ProgressBars`, `SwitchRow`, `kFieldColors`; `SegmentedRing` / `RestRing` (no glow) and `ringBox(max)` (always square); `cssGradientEndpoints`; `ReorderableColumn` (long-press drag, fixed row height); `PlanGridView`; `RegularSummary` / `setsLabel`. |
 | `ui/theme/*` | Colour tokens `K` (bg #121414, teal #14B8A6, rest amber #F2B544…), `KText` (Archivo at width 125 for display, Manrope for body, JetBrains Mono for numbers), `KShape` (rounded rectangles, never pills). |
@@ -94,7 +94,7 @@ ui/* Compose screens read StateFlows from KinetikApp; no ViewModels.
 - **What's spoken or beeped:** `Cues.kt` (add a `CuesTest`).
 - **Live screen look:** `LiveScreen.kt` / `LiveModel.kt`. Home look: `HomeScreen.kt`.
 - **Specs and history:**
-  - `docs/superpowers/specs/2026-10-09-kinetik-design.md`. §11–12 record post-launch changes.
+  - `docs/superpowers/specs/2026-10-09-kinetik-design.md`. §11–13 record post-launch changes.
   - The plan is in `docs/superpowers/plans/`.
   - Deferred items are in `docs/follow-ups.md`.
   - The design reference is `docs/design/mockup.html`.
@@ -104,4 +104,5 @@ ui/* Compose screens read StateFlows from KinetikApp; no ViewModels.
 - A Glance widget recomposes on every emission it collects, so feed it the deduped `app.widget` flow, never the raw session state.
 - Android replays the original launch intent when it recreates an activity, which is why `shouldStartFromIntent` exists.
 - `enableEdgeToEdge()` follows the system theme. The app forces `SystemBarStyle.dark`.
+- The notification must not change every second: One UI's status-bar media chip restarts its scrolling text on every re-post. The rest countdown runs as the media card's progress bar (duration + position) instead.
 - `ModalBottomSheet` opens half-expanded by default and hides the buttons under the gesture bar.

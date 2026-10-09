@@ -39,6 +39,8 @@ data class LiveModel(
     val nextReps: String?,
     val canBreak: Boolean,
     val breakLeft: String?,
+    /** Time since the set appeared (so it includes a late start); null during a rest. */
+    val elapsed: String?,
     val queue: List<QueueRow>,
 )
 
@@ -101,6 +103,7 @@ fun liveModel(s: SessionState): LiveModel {
         nextReps = next?.let(::repsLabel),
         canBreak = work?.maxBreakSec != null,
         breakLeft = s.breakRemainingMs?.let(::countdown),
+        elapsed = work?.let { stopwatch(s.stepElapsedMs) },
         queue = queue,
     )
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
@@ -33,6 +34,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.kinetik.app
 import dev.kinetik.cues.Cue
+import dev.kinetik.cues.VOICE_LABELS
+import dev.kinetik.cues.chosenVoice
 import dev.kinetik.model.Settings
 import dev.kinetik.ui.components.BigButton
 import dev.kinetik.ui.components.SwitchRow
@@ -47,6 +50,9 @@ fun SettingsScreen(onBack: () -> Unit) {
     val s = lib.settings
     fun set(t: (Settings) -> Settings) = app.store.update { it.copy(settings = t(it.settings)) }
     var volume by remember { mutableFloatStateOf(s.beepVolume / 100f) }
+    var pickingVoice by remember { mutableStateOf(false) }
+    val voices by app.cues.voices.collectAsStateWithLifecycle()
+    val voice = chosenVoice(s.voiceName, voices.map { it.name })
 
     Column(
         Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -56,7 +62,13 @@ fun SettingsScreen(onBack: () -> Unit) {
             Text("‹", Modifier.clickable(onClick = onBack).padding(end = 12.dp), style = KText.body.copy(fontSize = 26.sp, color = K.Muted))
             Text("Settings", style = KText.display(26.sp))
         }
-        SettingCard { SwitchRow("Voice announcements", s.voiceOn) { v -> set { it.copy(voiceOn = v) } } }
+        SettingCard {
+            SwitchRow("Voice announcements", s.voiceOn) { v -> set { it.copy(voiceOn = v) } }
+            Row(Modifier.fillMaxWidth().clickable { pickingVoice = true }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Voice", Modifier.weight(1f), style = KText.body.copy(fontSize = 15.sp))
+                Text(VOICE_LABELS[voice] ?: "Unavailable", style = KText.body.copy(fontSize = 14.sp, color = K.Muted))
+            }
+        }
         SettingCard {
             Text("Beep volume", style = KText.body.copy(fontSize = 15.sp))
             Slider(
@@ -68,6 +80,35 @@ fun SettingsScreen(onBack: () -> Unit) {
             BigButton("Test beep", { app.cues.play(listOf(Cue.ShortBeep, Cue.LongBeep)) }, Modifier.padding(top = 8.dp), primary = false, height = 48.dp, textSize = 14.sp)
         }
         SettingCard { SwitchRow("Keep screen on during workouts", s.keepScreenOn) { v -> set { it.copy(keepScreenOn = v) } } }
+    }
+    if (pickingVoice) {
+        // Picking a voice plays a sample straight away, so you can compare them without leaving the list.
+        fun pick(name: String) {
+            set { it.copy(voiceName = name) }
+            app.cues.voiceName = name
+            app.cues.play(listOf(Cue.Speak("Eight Pull ups")))
+        }
+        AlertDialog(
+            onDismissRequest = { pickingVoice = false },
+            title = { Text("Voice") },
+            text = {
+                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (voices.isEmpty()) Text("None of the voices are installed.", style = KText.body.copy(color = K.Muted, fontSize = 13.sp))
+                    voices.forEach { v -> VoiceRow(VOICE_LABELS.getValue(v.name), voice == v.name) { pick(v.name) } }
+                }
+            },
+            confirmButton = { TextButton({ pickingVoice = false }) { Text("Done") } },
+        )
+    }
+}
+
+@Composable
+private fun VoiceRow(name: String, selected: Boolean, onClick: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(if (selected) K.Teal.copy(alpha = 0.16f) else K.Card)
+            .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 10.dp),
+    ) {
+        Text(name, style = KText.body.copy(fontSize = 15.sp, color = if (selected) K.TealHi else K.Text))
     }
 }
 

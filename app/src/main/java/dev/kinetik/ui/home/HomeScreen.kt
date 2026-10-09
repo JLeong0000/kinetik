@@ -49,8 +49,10 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -259,7 +261,8 @@ private fun HingeGradient(modifier: Modifier) {
 @Composable
 private fun HomeHeader(onAdd: () -> Unit, onSettings: (() -> Unit)?) {
     Row(Modifier.fillMaxWidth().padding(4.dp, 6.dp, 4.dp, 16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("Workouts", Modifier.weight(1f), style = KText.display(26.sp))
+        val outline = Stroke(width = with(LocalDensity.current) { 1.2.dp.toPx() })
+        Text("KINETIK", Modifier.weight(1f), style = KText.display(26.sp).copy(color = K.Teal, drawStyle = outline))
         if (onSettings != null) {
             Text("Settings", Modifier.padding(end = 14.dp).clickable(onClick = onSettings), style = KText.body.copy(color = K.Muted))
         }

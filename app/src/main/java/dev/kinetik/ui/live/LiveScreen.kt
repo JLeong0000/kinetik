@@ -76,6 +76,7 @@ fun LiveScreen(mode: LayoutMode, onExit: () -> Unit) {
     val lib by app.store.library.collectAsStateWithLifecycle()
     val voiceReady by app.cues.voiceReady.collectAsStateWithLifecycle()
     var confirmEnd by remember { mutableStateOf(false) }
+    var jump by remember { mutableStateOf<Jump?>(null) }
 
     // Leaving always goes through stop() → state becomes null → we exit once.
     val u = ui ?: run {
@@ -93,10 +94,31 @@ fun LiveScreen(mode: LayoutMode, onExit: () -> Unit) {
     val send: (SessionEvent) -> Unit = app.session::send
     val voiceMissing = lib.settings.voiceOn && !voiceReady
     val onEnd = { confirmEnd = true }
+    val section = m.section.lowercase()
+    val onJump = { c: Int ->
+        if (c != m.circuitNumber - 1) {
+            jump = Jump("Jump to $section ${c + 1}?", "You'll start at its first exercise. You're on $section ${m.circuitNumber} of ${m.circuits}.", SessionEvent.JumpTo(c))
+        }
+    }
+    // The ring only has segments during a set, one per exercise in this circuit, in queue order.
+    val onExercise = { i: Int ->
+        if (i != m.activeSegment) {
+            jump = Jump("Jump to ${m.queue[i].name}?", "Exercise ${i + 1} of ${m.segments} in this $section.", SessionEvent.JumpTo(m.circuitNumber - 1, i))
+        }
+    }
     when (mode) {
-        LayoutMode.COVER -> LiveCover(m, send, voiceMissing, onEnd)
-        LayoutMode.MAIN -> LiveMain(m, send, voiceMissing, onEnd)
-        LayoutMode.TABLETOP -> LiveTabletop(m, send, onEnd)
+        LayoutMode.COVER -> LiveCover(m, send, voiceMissing, onEnd, onJump, onExercise)
+        LayoutMode.MAIN -> LiveMain(m, send, voiceMissing, onEnd, onJump, onExercise)
+        LayoutMode.TABLETOP -> LiveTabletop(m, send, onEnd, onJump, onExercise)
+    }
+    jump?.let { j ->
+        AlertDialog(
+            onDismissRequest = { jump = null },
+            title = { Text(j.title) },
+            text = { Text(j.detail) },
+            confirmButton = { TextButton({ jump = null; send(j.event) }) { Text("Jump") } },
+            dismissButton = { TextButton({ jump = null }) { Text("Cancel") } },
+        )
     }
     if (confirmEnd) {
         AlertDialog(
@@ -107,6 +129,8 @@ fun LiveScreen(mode: LayoutMode, onExit: () -> Unit) {
         )
     }
 }
+
+private data class Jump(val title: String, val detail: String, val event: SessionEvent.JumpTo)
 
 @Composable
 private fun KeepScreenOn(on: Boolean) {
@@ -133,15 +157,15 @@ private fun rememberPulse(active: Boolean, key: Any): Float {
 
 /** Everything sits in a tight group around the vertical centre (cover screen). */
 @Composable
-private fun LiveCover(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: Boolean, onEnd: () -> Unit) {
+private fun LiveCover(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: Boolean, onEnd: () -> Unit, onJump: (Int) -> Unit, onExercise: (Int) -> Unit) {
     Column(
         Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp).padding(bottom = 40.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         LiveHeader(m, onEnd)
-        ProgressBars(m.circuits, m.circuitNumber - 1)
-        RingBlock(m, Modifier.ringBox(340.dp), stroke = 18.dp, bigSize = 116.sp, nameSize = 24.sp)
+        ProgressBars(m.circuits, m.circuitNumber - 1, onTap = onJump)
+        RingBlock(m, Modifier.ringBox(340.dp), stroke = 18.dp, bigSize = 116.sp, nameSize = 24.sp, onExercise)
         if (voiceMissing) Tag("Voice unavailable")
         if (m.isRest) {
             NextStrip(m, "Up next", dim = false)
@@ -154,7 +178,7 @@ private fun LiveCover(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: 
 }
 
 @Composable
-private fun LiveMain(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: Boolean, onEnd: () -> Unit) {
+private fun LiveMain(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: Boolean, onEnd: () -> Unit, onJump: (Int) -> Unit, onExercise: (Int) -> Unit) {
     Row(Modifier.fillMaxSize().safeDrawingPadding()) {
         Column(
             Modifier.weight(1f).fillMaxHeight().padding(22.dp),
@@ -168,7 +192,7 @@ private fun LiveMain(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: B
                 }
                 Text("End", Modifier.clickable(onClick = onEnd).padding(8.dp), style = KText.body.copy(color = K.Muted))
             }
-            RingBlock(m, Modifier.ringBox(400.dp), stroke = 20.dp, bigSize = 150.sp, nameSize = 28.sp)
+            RingBlock(m, Modifier.ringBox(400.dp), stroke = 20.dp, bigSize = 150.sp, nameSize = 28.sp, onExercise)
             if (voiceMissing) Tag("Voice unavailable")
         }
         Column(Modifier.weight(1f).fillMaxHeight().padding(22.dp)) {
@@ -187,7 +211,7 @@ private fun LiveMain(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: B
                         else -> Triple(K.Card, K.Muted, "")
                     }
                     Column(
-                        Modifier.weight(1f).clip(RoundedCornerShape(14.dp)).background(bg).padding(vertical = 10.dp),
+                        Modifier.weight(1f).clip(RoundedCornerShape(14.dp)).background(bg).clickable { onJump(i) }.padding(vertical = 10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text("${i + 1}", style = KText.mono(18.sp).copy(color = fg))
@@ -209,14 +233,14 @@ private fun LiveMain(m: LiveModel, send: (SessionEvent) -> Unit, voiceMissing: B
 
 /** Half-folded on the floor: timer on the top half, big buttons on the bottom half. */
 @Composable
-private fun LiveTabletop(m: LiveModel, send: (SessionEvent) -> Unit, onEnd: () -> Unit) {
+private fun LiveTabletop(m: LiveModel, send: (SessionEvent) -> Unit, onEnd: () -> Unit, onJump: (Int) -> Unit, onExercise: (Int) -> Unit) {
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.weight(1f).fillMaxWidth().safeDrawingPadding().padding(horizontal = 34.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(28.dp),
         ) {
-            RingBlock(m, Modifier.ringBox(300.dp), stroke = 16.dp, bigSize = 100.sp, nameSize = 20.sp)
+            RingBlock(m, Modifier.ringBox(300.dp), stroke = 16.dp, bigSize = 100.sp, nameSize = 20.sp, onExercise)
             Column(Modifier.weight(1f)) {
                 Label("${m.workoutName} · ${m.section} ${m.circuitNumber}/${m.circuits} · ${m.sub}")
                 if (m.nextName != null) {
@@ -230,7 +254,7 @@ private fun LiveTabletop(m: LiveModel, send: (SessionEvent) -> Unit, onEnd: () -
             Modifier.weight(1f).fillMaxWidth().background(K.FlexBottom).padding(horizontal = 34.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically),
         ) {
-            ProgressBars(m.circuits, m.circuitNumber - 1)
+            ProgressBars(m.circuits, m.circuitNumber - 1, onTap = onJump)
             if (m.isRest) RestControls(m, send, 80.dp) else WorkControls(m, send, 80.dp)
         }
     }
@@ -255,11 +279,11 @@ private fun LiveHeader(m: LiveModel, onEnd: () -> Unit) {
 }
 
 @Composable
-internal fun RingBlock(m: LiveModel, modifier: Modifier, stroke: Dp, bigSize: TextUnit, nameSize: TextUnit) {
+internal fun RingBlock(m: LiveModel, modifier: Modifier, stroke: Dp, bigSize: TextUnit, nameSize: TextUnit, onExercise: (Int) -> Unit = {}) {
     val pulse = rememberPulse(m.beepZone, m.big)
     BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
         if (m.isRest) RestRing(m.restFraction, Modifier.fillMaxSize(), stroke)
-        else SegmentedRing(m.segments, m.activeSegment, m.activeSegment, Modifier.fillMaxSize(), stroke, gapDeg = 5f)
+        else SegmentedRing(m.segments, m.activeSegment, m.activeSegment, Modifier.fillMaxSize(), stroke, gapDeg = 5f, onTap = onExercise)
         // Largest square inside the ring's inner edge (side = inner diameter / √2), so text never reaches the ring.
         val inside = (minOf(maxWidth, maxHeight) - stroke * 4) * 0.707f
         Column(
@@ -286,6 +310,7 @@ internal fun RingBlock(m: LiveModel, modifier: Modifier, stroke: Dp, bigSize: Te
                 FitText(m.name, Modifier.weight(0.8f), KText.display(nameSize), maxLines = 2)
                 if (m.tags.isNotEmpty()) Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) { m.tags.forEach { Tag(it) } }
                 m.breakLeft?.let { Text("Break $it", Modifier.padding(top = 4.dp), style = KText.mono(18.sp).copy(color = K.Rest)) }
+                m.elapsed?.let { Text("⏱\uFE0E $it", Modifier.padding(top = 4.dp), style = KText.mono(18.sp).copy(color = K.Muted)) }
             }
         }
     }

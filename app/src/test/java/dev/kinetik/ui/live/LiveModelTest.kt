@@ -55,6 +55,13 @@ class LiveModelTest {
         assertEquals("MAX·T", m.queue[0].reps)
     }
 
+    @Test fun everySetCountsUpFromWhenItAppeared() {
+        assertEquals("0:00", liveModel(pull).elapsed)
+        assertEquals("1:05", liveModel(reduce(pull, SessionEvent.Tick(65_400))).elapsed)
+        assertEquals("0:07", liveModel(pull.copy(index = 25, stepElapsedMs = 7_500)).elapsed)
+        assertNull(liveModel(reduce(pull, SessionEvent.Done)).elapsed)
+    }
+
     @Test fun maxBreak() {
         val push = SessionState.start(Seed.push()).copy(index = 32)
         val m = liveModel(push)

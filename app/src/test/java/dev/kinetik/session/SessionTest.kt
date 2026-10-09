@@ -143,10 +143,54 @@ class SessionTest {
         val pull = SessionState.start(Seed.pull())
         assertEquals("Pull · Circuit 1/5" to "Pull ups · 8", notificationText(pull))
         val rest = reduce(pull, SessionEvent.Done)
-        assertEquals("Pull · Circuit 1/5" to "Rest 3:00 · next Chin ups", notificationText(rest))
-        assertEquals("Paused · Rest 3:00 · next Chin ups", notificationText(reduce(rest, SessionEvent.TogglePause)).second)
+        assertEquals("Pull · Circuit 1/5" to "Rest · next Chin ups", notificationText(rest))
+        assertEquals("Paused · Rest · next Chin ups", notificationText(reduce(rest, SessionEvent.TogglePause)).second)
         val neg = (pull.steps[24] as Step.Work).set
         assertEquals("Pull up negatives · max time (1/4)", setLabel(neg))
+    }
+
+    @Test fun jumpToCircuitStartsItsFirstSet() {
+        val pull = SessionState.start(Seed.pull())
+        val s = pull.after(SessionEvent.Done, tick1s, SessionEvent.TogglePause, SessionEvent.JumpTo(3))
+        assertEquals(3, s.circuit)
+        assertEquals("Pull up negatives", s.work?.name)
+        assertEquals(Phase.RUNNING, s.phase)
+        assertEquals(0L, s.stepElapsedMs)
+        assertEquals(1_000L, s.totalElapsedMs)
+        // Back to an earlier circuit works too.
+        assertEquals(0, s.after(SessionEvent.JumpTo(0)).circuit)
+    }
+
+    @Test fun jumpToAnExerciseInACircuit() {
+        val pull = SessionState.start(Seed.pull())
+        assertEquals("Inverted pull up rows", reduce(pull, SessionEvent.JumpTo(0, exercise = 2)).work?.name)
+        // Repeated sets start at the first one.
+        val neg = reduce(pull, SessionEvent.JumpTo(3, exercise = 1)).work!!
+        assertEquals("Chin up negatives" to 0, neg.name to neg.repeat)
+        assertEquals(pull, reduce(pull, SessionEvent.JumpTo(0, exercise = 9)))
+    }
+
+    @Test fun jumpClearsABreakAndIgnoresBadOrSameTargets() {
+        val s = SessionState.start(two).after(SessionEvent.Done, SessionEvent.Skip, SessionEvent.ToggleBreak)
+        assertTrue(s.breakRemainingMs != null)
+        assertNull(s.after(SessionEvent.JumpTo(0)).breakRemainingMs)
+        val first = SessionState.start(Seed.pull())
+        assertEquals(first, reduce(first, SessionEvent.JumpTo(0)))
+        assertEquals(first, reduce(first, SessionEvent.JumpTo(9)))
+    }
+
+    // On device: a countdown in the notification text re-posted it every second, and the status-bar chip jumped each time.
+    @Test fun notificationTextIsStillDuringARest() {
+        val rest = reduce(SessionState.start(Seed.pull()), SessionEvent.Done)
+        assertEquals(notificationText(rest), notificationText(rest.after(tick1s, tick1s, tick1s)))
+    }
+
+    @Test fun restProgressDrivesTheMediaCardBar() {
+        val pull = SessionState.start(Seed.pull())
+        assertNull(restProgress(pull))
+        val rest = reduce(pull, SessionEvent.Done).after(SessionEvent.Tick(800))
+        assertEquals(800L to 180_000L, restProgress(rest))
+        assertEquals(30_800L to 180_000L, restProgress(rest.after(SessionEvent.MinusThirty)))
     }
 
     // Final review: a stale notification Pause tapped as a set starts must not freeze the set.
