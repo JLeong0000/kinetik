@@ -68,6 +68,7 @@ import dev.kinetik.plan.shortLabel
 import dev.kinetik.plan.wholeLabel
 import dev.kinetik.session.countdown
 import dev.kinetik.ui.LayoutMode
+import dev.kinetik.ui.components.DayToggles
 import dev.kinetik.ui.components.Label
 import dev.kinetik.ui.components.PlanGridView
 import dev.kinetik.ui.components.ReorderableColumn
@@ -110,6 +111,10 @@ fun EditorScreen(workoutId: String, mode: LayoutMode, onBack: () -> Unit) {
 
     val header: @Composable () -> Unit = { EditorHeader(draft, dirty && errors.isEmpty(), { draft = draft.copy(name = it) }, back, ::save) }
     val rules: @Composable () -> Unit = { RuleTiles(draft, { stepper = it }) { draft = it } }
+    val days: @Composable () -> Unit = {
+        Label("Workout days")
+        DayToggles(draft.days, { draft = draft.copy(days = it) }, Modifier.padding(top = 6.dp, bottom = 14.dp))
+    }
     val list: @Composable () -> Unit = {
         ExerciseList(draft, onMove = { f, t -> draft = draft.moveExercise(f, t) }, onTap = { exerciseEdit = it to false }) {
             exerciseEdit = Exercise(name = "") to true
@@ -148,12 +153,12 @@ fun EditorScreen(workoutId: String, mode: LayoutMode, onBack: () -> Unit) {
     if (draft.type == WorkoutType.REGULAR) {
         if (mode == LayoutMode.COVER) {
             Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp)) {
-                header(); blocks()
+                header(); days(); blocks()
             }
         } else {
             Row(Modifier.fillMaxSize().safeDrawingPadding()) {
                 Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(18.dp, 18.dp)) {
-                    header(); blocks()
+                    header(); days(); blocks()
                 }
                 Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(18.dp, 18.dp)) {
                     Text("Run order", Modifier.padding(top = 8.dp, bottom = 10.dp), style = KText.display(20.sp))
@@ -163,12 +168,12 @@ fun EditorScreen(workoutId: String, mode: LayoutMode, onBack: () -> Unit) {
         }
     } else if (mode == LayoutMode.COVER) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp)) {
-            header(); rules(); list(); plan(false)
+            header(); days(); rules(); list(); plan(false)
         }
     } else {
         Row(Modifier.fillMaxSize().safeDrawingPadding()) {
             Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(18.dp, 18.dp)) {
-                header(); rules(); list()
+                header(); days(); rules(); list()
             }
             Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(18.dp, 18.dp)) {
                 plan(true)

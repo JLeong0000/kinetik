@@ -61,6 +61,8 @@ data class Workout(
     val blocks: List<Block> = emptyList(),
     /** Regular workouts: when set, the rest between sets for every exercise (overrides each exercise's own). */
     val setRestSec: Int? = null,
+    /** Days of the week (ISO: 1 = Monday … 7 = Sunday) on which this workout is the main card. Unique within a group. */
+    val days: List<Int> = emptyList(),
 )
 
 @Serializable

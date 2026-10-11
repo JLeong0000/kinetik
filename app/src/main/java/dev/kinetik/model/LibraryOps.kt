@@ -1,5 +1,7 @@
 package dev.kinetik.model
 
+import java.time.LocalDate
+
 fun Library.allWorkouts(): List<Workout> = groups.flatMap { it.workouts }
 
 fun Library.workout(id: String): Workout? = allWorkouts().firstOrNull { it.id == id }
@@ -7,16 +9,24 @@ fun Library.workout(id: String): Workout? = allWorkouts().firstOrNull { it.id ==
 fun Library.groupOf(workoutId: String): Group? =
     groups.firstOrNull { g -> g.workouts.any { it.id == workoutId } }
 
-/** The workout after the last completed one, wrapping around; the first workout if none was completed. */
-fun Library.upNext(): Workout? {
+/**
+ * The first workout (in group order) scheduled for [today], done or not; otherwise the workout after the
+ * last completed one, wrapping around, or the first workout if none was completed.
+ */
+fun Library.upNext(today: Int = LocalDate.now().dayOfWeek.value): Workout? {
     val all = allWorkouts()
     if (all.isEmpty()) return null
+    all.firstOrNull { today in it.days }?.let { return it }
     val last = all.indexOfFirst { it.id == lastCompletedWorkoutId }
     return if (last < 0) all.first() else all[(last + 1) % all.size]
 }
 
+/** Replaces [w]; any of its days held by another workout in its group move to [w]. */
 fun Library.updateWorkout(w: Workout): Library =
-    copy(groups = groups.map { g -> g.copy(workouts = g.workouts.map { if (it.id == w.id) w else it }) })
+    copy(groups = groups.map { g ->
+        if (g.workouts.none { it.id == w.id }) g
+        else g.copy(workouts = g.workouts.map { if (it.id == w.id) w else it.copy(days = it.days - w.days.toSet()) })
+    })
 
 fun Library.addWorkout(groupId: String, w: Workout): Library =
     copy(groups = groups.map { if (it.id == groupId) it.copy(workouts = it.workouts + w) else it })

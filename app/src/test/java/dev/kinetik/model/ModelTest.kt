@@ -6,6 +6,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+private const val MONDAY = 1
+private const val TUESDAY = 2
+private const val THURSDAY = 4
+private const val FRIDAY = 5
+
 class ModelTest {
     private fun workout(vararg names: String) = Workout(
         name = "W", circuits = 3, repDrop = 1, restExerciseSec = 60, restCircuitSec = 120,
@@ -91,6 +96,39 @@ class ModelTest {
         assertEquals("One", lib.copy(lastCompletedWorkoutId = ids[2]).upNext()?.name)
         assertEquals("One", lib.copy(lastCompletedWorkoutId = "deleted").upNext()?.name)
         assertNull(Library(groups = emptyList()).upNext())
+    }
+
+    @Test fun upNextPrefersTodaysScheduledWorkoutEvenAfterItIsDone() {
+        val lib = library()
+        val three = lib.allWorkouts()[2]
+        val scheduled = lib.updateWorkout(three.copy(days = listOf(MONDAY)))
+        assertEquals("Three", scheduled.upNext(today = MONDAY)?.name)
+        assertEquals("Three", scheduled.copy(lastCompletedWorkoutId = three.id).upNext(today = MONDAY)?.name)
+        assertEquals("One", scheduled.upNext(today = TUESDAY)?.name) // nothing scheduled: the rotation
+    }
+
+    @Test fun upNextTakesTheFirstScheduledWorkoutInGroupOrder() {
+        val lib = library()
+        val (_, two, three) = lib.allWorkouts()
+        val both = lib.updateWorkout(three.copy(days = listOf(MONDAY))).updateWorkout(two.copy(days = listOf(MONDAY)))
+        assertEquals("Two", both.upNext(today = MONDAY)?.name)
+    }
+
+    @Test fun aDayBelongsToOneWorkoutPerGroup() {
+        val lib = library()
+        val (one, two, three) = lib.allWorkouts()
+        val after = lib.updateWorkout(one.copy(days = listOf(MONDAY, THURSDAY)))
+            .updateWorkout(three.copy(days = listOf(MONDAY)))
+            .updateWorkout(two.copy(days = listOf(THURSDAY, FRIDAY)))
+        assertEquals(listOf(MONDAY), after.workout(one.id)?.days) // Thursday moved to Two
+        assertEquals(listOf(THURSDAY, FRIDAY), after.workout(two.id)?.days)
+        assertEquals(listOf(MONDAY), after.workout(three.id)?.days) // another group keeps its Monday
+    }
+
+    @Test fun workoutsSavedBeforeDaysLoadWithNone() {
+        val json = Json { ignoreUnknownKeys = true }
+        val old = """{"name":"W","circuits":3,"repDrop":1,"restExerciseSec":60,"restCircuitSec":120,"exercises":[]}"""
+        assertEquals(emptyList<Int>(), json.decodeFromString<Workout>(old).days)
     }
 
     @Test fun moveWorkoutWithinAndBetweenGroups() {

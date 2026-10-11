@@ -44,8 +44,8 @@ class KinetikApp : Application() {
             }
         }
         // Widgets read this deduped model, and are poked only when it changes (about once a second during a rest).
-        widget = widgetModels(session.state, store.library)
-            .stateIn(scope, SharingStarted.Eagerly, widgetModel(session.state.value, store.library.value))
+        widget = widgetModels(session.state)
+            .stateIn(scope, SharingStarted.Eagerly, widgetModel(session.state.value))
         scope.launch {
             widget.collect { runCatching { KinetikWidget().updateAll(this@KinetikApp) } }
         }

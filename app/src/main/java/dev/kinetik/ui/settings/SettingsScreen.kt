@@ -42,9 +42,11 @@ import dev.kinetik.ui.components.SwitchRow
 import dev.kinetik.ui.theme.K
 import dev.kinetik.ui.theme.KText
 import kotlin.math.roundToInt
+import dev.kinetik.ui.LayoutMode
+import dev.kinetik.ui.components.NavFooter
 
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(mode: LayoutMode, onBack: () -> Unit) {
     val app = LocalContext.current.app
     val lib by app.store.library.collectAsStateWithLifecycle()
     val s = lib.settings
@@ -54,32 +56,35 @@ fun SettingsScreen(onBack: () -> Unit) {
     val voices by app.cues.voices.collectAsStateWithLifecycle()
     val voice = chosenVoice(s.voiceName, voices.map { it.name })
 
-    Column(
-        Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("‹", Modifier.clickable(onClick = onBack).padding(end = 12.dp), style = KText.body.copy(fontSize = 26.sp, color = K.Muted))
-            Text("Settings", style = KText.display(26.sp))
-        }
-        SettingCard {
-            SwitchRow("Voice announcements", s.voiceOn) { v -> set { it.copy(voiceOn = v) } }
-            Row(Modifier.fillMaxWidth().clickable { pickingVoice = true }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Voice", Modifier.weight(1f), style = KText.body.copy(fontSize = 15.sp))
-                Text(VOICE_LABELS[voice] ?: "Unavailable", style = KText.body.copy(fontSize = 14.sp, color = K.Muted))
+    Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+        Column(
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("‹", Modifier.clickable(onClick = onBack).padding(end = 12.dp), style = KText.body.copy(fontSize = 26.sp, color = K.Muted))
+                Text("Settings", style = KText.display(26.sp))
             }
+            SettingCard {
+                SwitchRow("Voice announcements", s.voiceOn) { v -> set { it.copy(voiceOn = v) } }
+                Row(Modifier.fillMaxWidth().clickable { pickingVoice = true }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Voice", Modifier.weight(1f), style = KText.body.copy(fontSize = 15.sp))
+                    Text(VOICE_LABELS[voice] ?: "Unavailable", style = KText.body.copy(fontSize = 14.sp, color = K.Muted))
+                }
+            }
+            SettingCard {
+                Text("Beep volume", style = KText.body.copy(fontSize = 15.sp))
+                Slider(
+                    value = volume,
+                    onValueChange = { volume = it },
+                    onValueChangeFinished = { set { it.copy(beepVolume = (volume * 100).roundToInt()) } },
+                    colors = SliderDefaults.colors(thumbColor = K.Teal, activeTrackColor = K.Teal, inactiveTrackColor = K.Card2),
+                )
+                BigButton("Test beep", { app.cues.play(listOf(Cue.ShortBeep, Cue.LongBeep)) }, Modifier.padding(top = 8.dp), primary = false, height = 48.dp, textSize = 14.sp)
+            }
+            SettingCard { SwitchRow("Keep screen on during workouts", s.keepScreenOn) { v -> set { it.copy(keepScreenOn = v) } } }
         }
-        SettingCard {
-            Text("Beep volume", style = KText.body.copy(fontSize = 15.sp))
-            Slider(
-                value = volume,
-                onValueChange = { volume = it },
-                onValueChangeFinished = { set { it.copy(beepVolume = (volume * 100).roundToInt()) } },
-                colors = SliderDefaults.colors(thumbColor = K.Teal, activeTrackColor = K.Teal, inactiveTrackColor = K.Card2),
-            )
-            BigButton("Test beep", { app.cues.play(listOf(Cue.ShortBeep, Cue.LongBeep)) }, Modifier.padding(top = 8.dp), primary = false, height = 48.dp, textSize = 14.sp)
-        }
-        SettingCard { SwitchRow("Keep screen on during workouts", s.keepScreenOn) { v -> set { it.copy(keepScreenOn = v) } } }
+        if (mode == LayoutMode.COVER) NavFooter(onWorkouts = onBack, onSettings = null)
     }
     if (pickingVoice) {
         // Picking a voice plays a sample straight away, so you can compare them without leaving the list.

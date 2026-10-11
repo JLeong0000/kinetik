@@ -164,3 +164,44 @@ fun kFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
     unfocusedPlaceholderColor = K.Muted,
     cursorColor = K.Teal,
 )
+
+private val DAY_LABELS = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su")
+
+private val DAY_NAMES = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+/** A workout's days as "Mon · Thu" (ISO numbers, 1 = Monday). */
+fun daysLabel(days: List<Int>): String = days.sorted().joinToString(" · ") { DAY_NAMES[it - 1] }
+
+/** Mon–Sun toggles for a workout's [days] (ISO numbers, 1 = Monday); [onChange] gets them sorted. */
+@Composable
+fun DayToggles(days: List<Int>, onChange: (List<Int>) -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        DAY_LABELS.forEachIndexed { i, label ->
+            val day = i + 1
+            val on = day in days
+            Box(
+                Modifier.weight(1f).height(40.dp).clip(KShape.Small).background(if (on) K.Teal else K.Card2)
+                    .clickable { onChange(if (on) days - day else (days + day).sorted()) },
+                contentAlignment = Alignment.Center,
+            ) { Text(label, style = KText.body.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (on) K.OnTeal else K.Muted)) }
+        }
+    }
+}
+
+/** The cover screen's bottom bar. The current screen is marked and gets a null callback. */
+@Composable
+fun NavFooter(onWorkouts: (() -> Unit)?, onSettings: (() -> Unit)?) {
+    Row(
+        Modifier.fillMaxWidth().background(K.Bg).padding(top = 14.dp, bottom = 18.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+    ) {
+        NavFooterItem("Workouts", onWorkouts)
+        NavFooterItem("Settings", onSettings)
+    }
+}
+
+@Composable
+private fun NavFooterItem(label: String, onClick: (() -> Unit)?) {
+    if (onClick == null) Text("● $label", style = KText.body.copy(color = K.TealHi, fontSize = 12.sp))
+    else Text(label, Modifier.clickable(onClick = onClick), style = KText.body.copy(color = K.Muted, fontSize = 12.sp))
+}

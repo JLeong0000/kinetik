@@ -38,7 +38,6 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
                 .launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-        if (shouldStartFromIntent(restored = savedInstanceState != null, flags = intent.flags)) startFromIntent(intent)
         setContent {
             KinetikTheme {
                 val foldFlow = remember { WindowInfoTracker.getOrCreate(this).windowLayoutInfo(this).map { it.toFold() } }
@@ -50,27 +49,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    override fun onNewIntent(intent: android.content.Intent) {
-        super.onNewIntent(intent)
-        startFromIntent(intent)
-    }
-
-    /** The widget's Start button opens the app with the workout to start. */
-    private fun startFromIntent(intent: android.content.Intent?) {
-        val id = intent?.getStringExtra(EXTRA_START) ?: return
-        intent.removeExtra(EXTRA_START)
-        app.session.start(id)
-    }
-
-    companion object {
-        const val EXTRA_START = "dev.kinetik.START_WORKOUT"
-    }
 }
-
-/**
- * A widget Start arrives as the launch intent. Android keeps that original intent and replays it when it
- * recreates the activity (after process death, or from recents), so only a fresh launch may start a workout.
- */
-fun shouldStartFromIntent(restored: Boolean, flags: Int): Boolean =
-    !restored && (flags and android.content.Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0

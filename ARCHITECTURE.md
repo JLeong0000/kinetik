@@ -45,8 +45,8 @@ ui/* Compose screens read StateFlows from KinetikApp; no ViewModels.
 
 | File | Responsibility |
 |---|---|
-| `model/Model.kt` | `@Serializable` data: `Library(groups, lastCompletedWorkoutId, settings)` → `Group` → `Workout(type, circuits, repDrop, restExerciseSec, restCircuitSec, exercises, overrides, blocks, setRestSec)`; `Exercise(name, kind, startReps, weightKg, sets, maxBreakSec, restSec)`; `CircuitOverride(circuit, scope SLOT/WHOLE, slot, exercises)`; `Block`; `Settings`. Every new field **must have a default** (old JSON must load). |
-| `model/LibraryOps.kt` | Group and workout list edits, `upNext()` (rotates after `lastCompletedWorkoutId`), and `List.moved()`. |
+| `model/Model.kt` | `@Serializable` data: `Library(groups, lastCompletedWorkoutId, settings)` → `Group` → `Workout(type, circuits, repDrop, restExerciseSec, restCircuitSec, exercises, overrides, blocks, setRestSec, days)`; `days` are ISO weekdays (1 = Mon), unique within a group; `Exercise(name, kind, startReps, weightKg, sets, maxBreakSec, restSec)`; `CircuitOverride(circuit, scope SLOT/WHOLE, slot, exercises)`; `Block`; `Settings`. Every new field **must have a default** (old JSON must load). |
+| `model/LibraryOps.kt` | Group and workout list edits, `upNext(today)` (the first workout scheduled for today in group order, done or not; otherwise it rotates after `lastCompletedWorkoutId`), `updateWorkout` (a workout's days move to it from the rest of its group), and `List.moved()`. |
 | `model/WorkoutEdits.kt` | Circuit edits (moving or deleting an exercise remaps slot overrides), `setCircuits`, and `validate()`, which branches on type. |
 | `model/BlockEdits.kt` | `newCircuitWorkout()` / `newRegularWorkout()`, the block edit functions, `Workout.sections` (circuits or non-empty blocks), and `summary()` (singular/plural). |
 | `model/Seed.kt` | The owner's Pull / Push / Legs / Abs plan, written on first launch. |
@@ -60,23 +60,23 @@ ui/* Compose screens read StateFlows from KinetikApp; no ViewModels.
 | `cues/Beeper.kt`, `cues/CuePlayer.kt` | Sine beeps from two prebuilt static AudioTracks; audio errors are swallowed so they can't crash a workout. TTS. Each cue takes transient audio focus with ducking (held ~1.2 s after a short beep, so the countdown ducks once); a cue that's refused focus is dropped. Speech after a long beep waits 650 ms. `voices` (the four in `VOICE_LABELS`, Cues.kt) / `voiceName` back the Settings voice picker (null or missing → `chosenVoice` picks the first installed). `stop()` clears queued cues on End. |
 | `service/WorkoutService.kt` | specialUse foreground service plus a 3 h partial wake lock. MediaStyle notification and a MediaSession with **custom actions only** (no play/pause, so earbuds stay with the music app). Stops itself when `serviceShouldRun` is false. |
 | `store/WorkoutStore.kt` | A single `files/workouts.json`, written atomically. A corrupt file is kept as `workouts.bad-<millis>.json` (earlier backups are never overwritten) and the seed is loaded (`recoveredFromCorruption` triggers the snackbar). |
-| `widget/WidgetModel.kt` | `widgetModel(state, library)` (live or idle up-next) and `widgetModels()`, deduped. |
-| `widget/KinetikWidget.kt` | Glance widget and receiver. `SizeMode.Responsive`: below 110 dp tall it uses the compact 4×1 row. `ControlAction` switches to Main before calling `session.send`. Start opens `MainActivity` with `EXTRA_START`. |
-| `MainActivity.kt` | Edge-to-edge (light system-bar icons), notification permission, fold posture → `LayoutMode`. Widget Start runs only on a fresh launch (`shouldStartFromIntent`). |
+| `widget/WidgetModel.kt` | `widgetModel(state)`: the live workout, "Workout complete", or idle "Start a workout" (`showStart`). `widgetModels(session)` is deduped. It doesn't read the library. |
+| `widget/KinetikWidget.kt` | Glance widget and receiver. `SizeMode.Responsive`: below 110 dp tall it uses the compact 4×1 row. `ControlAction` switches to Main before calling `session.send`. Idle Start just opens `MainActivity`; you pick the workout in the app. |
+| `MainActivity.kt` | Edge-to-edge (light system-bar icons), notification permission, fold posture → `LayoutMode`. |
 | `ui/LayoutMode.kt` | COVER (< 600 dp) / MAIN / TABLETOP (half-open, horizontal hinge). |
-| `ui/KinetikNav.kt` | Routes `home`, `edit/{id}`, `live`, `settings`. Jumps to `live` whenever a session exists; leaving live pops one entry, back to home or to an open editor. |
-| `ui/home/HomeScreen.kt` | Bento cards, collapsible groups, card menus, the Circuit/Regular choice dialog, and the main-screen detail pane with the hinge gradient. |
+| `ui/KinetikNav.kt` | Routes `home`, `edit/{id}`, `live`, `settings`, with 150 ms cross-fades. Jumps to `live` whenever a session exists; leaving live pops one entry, back to home or to an open editor. |
+| `ui/home/HomeScreen.kt` | Bento cards, collapsible groups, card menus (incl. "Set days…"), the Circuit/Regular choice dialog, and the main-screen detail pane with the hinge gradient. Header + adds a group; group ⋮ is rename / move only. Passive motion: the KINETIK outline gets a glow sweep every 3.6 s; the cover's top card drifts its gradient, turns its outlined ring and traces a glow round its segments (`TopCardMotion`, all read at draw time so nothing recomposes per frame). Small cards: solid grey rings and a "Mon · Thu" line. |
 | `ui/home/Groups.kt` | `expandedOnStart` (only the up-next group). |
 | `ui/editor/EditorScreen.kt` | Draft editing (`rememberSaveable` through `WorkoutCodec`, so it survives recreation). It validates and saves `draft.pruned()` (out-of-range overrides are kept in the draft until save) and has a discard prompt. Branches into circuit (rule tiles, exercise list, plan grid, overrides) or regular. |
 | `ui/editor/RegularEditor.kt`, `Fields.kt`, `Sheets.kt` | Block cards, rule tiles, `ExerciseFields` (with a `regular` flag), `StepperDialog`, and the exercise/override bottom sheets (always fully expanded). |
 | `ui/live/LiveModel.kt` | `liveModel(state)`: big text (reps / MAX / clock), tags (weight, "Set n of m"), `elapsed` (count-up since the set appeared), segments, queue, next. `liveUi(flow)` is the deduped screen state (~1 Hz); the live screen collects it, never the raw session. |
 | `ui/live/LiveScreen.kt` | Cover (grouped around the centre) / main (ring + queue) / tabletop layouts, the finish screen, and keep-screen-on. `RingBlock` fits text inside the circle's inscribed square using BasicText autoSize. |
-| `ui/components/*` | `BigButton`, `Tag`, `Label`, `StatTile`, `ProgressBars`, `SwitchRow`, `kFieldColors`; `SegmentedRing` / `RestRing` (no glow) and `ringBox(max)` (always square); `cssGradientEndpoints`; `ReorderableColumn` (long-press drag, fixed row height); `PlanGridView`; `RegularSummary` / `setsLabel`. |
+| `ui/components/*` | `BigButton`, `Tag`, `Label`, `StatTile`, `ProgressBars`, `SwitchRow`, `kFieldColors`; `SegmentedRing` (optional `outline` = hollow teal segments, `glow` = traveling border glow; the home top card only) / `RestRing` and `ringBox(max)` (always square); `DayToggles` / `daysLabel`; `NavFooter` (cover bottom bar on home and settings); `cssGradientEndpoints`; `ReorderableColumn` (long-press drag, fixed row height); `PlanGridView`; `RegularSummary` / `setsLabel`. |
 | `ui/theme/*` | Colour tokens `K` (bg #121414, teal #14B8A6, rest amber #F2B544…), `KText` (Archivo at width 125 for display, Manrope for body, JetBrains Mono for numbers), `KShape` (rounded rectangles, never pills). |
 
 ## Runtime flow
 
-1. Start (home button or widget) → `SessionController.start(id)`: build the plan, announce the first set, start `WorkoutService`, start ticking.
+1. Start (home button; the widget only opens the app) → `SessionController.start(id)`: build the plan, announce the first set, start `WorkoutService`, start ticking.
 2. Each tick → `reduce` → a new `SessionState` → `cuesFor` plays beeps and speech → the live UI recomposes. The notification only re-posts when its text changes, and the widget only updates when its `WidgetModel` changes.
 3. DONE → rest; the rest ends on a tick → long beep → next set announced. The final DONE → FINISHED: completion is recorded (moving up-next along), the service stops itself, and the finish screen stays until CLOSE calls `stop()`.
 
@@ -86,13 +86,14 @@ ui/* Compose screens read StateFlows from KinetikApp; no ViewModels.
 - The UI only sees a workout once it has passed `validate()`, so plans are never empty in practice.
 - The live screen and the widget read deduped flows (`liveUi`, `app.widget`), never the raw 100 ms session state.
 - Rings must be sized with `ringBox()`. The cover screen is **360 dp** wide, and a fixed size squashes rings into ovals.
-- Buttons are flat rounded rectangles: no glow, no pills.
+- Buttons are flat rounded rectangles: no glow, no pills. Rings don't glow either, except the home top card's passive trace (owner's request).
 
 ## Where to change things
 - **New exercise or workout field:** `Model.kt` (with a default), then `Plan.kt`, then `LiveModel` / `WidgetModel` if it's shown, then `Fields.kt`.
 - **Timing or controls behaviour:** `Session.kt` `reduce` (add a `SessionTest`), then `controlsFor` for the buttons.
 - **What's spoken or beeped:** `Cues.kt` (add a `CuesTest`).
 - **Live screen look:** `LiveScreen.kt` / `LiveModel.kt`. Home look: `HomeScreen.kt`.
+- **The midnight edge:** `upNext()` reads today's date when composed; an app left open overnight shows the new day's workout on the next recomposition, not at midnight.
 - **Specs and history:**
   - `docs/superpowers/specs/2026-10-09-kinetik-design.md`. §11–13 record post-launch changes.
   - The plan is in `docs/superpowers/plans/`.
@@ -102,7 +103,6 @@ ui/* Compose screens read StateFlows from KinetikApp; no ViewModels.
 ## Gotchas
 - Glance's Intent-based `actionStartActivity` is in `androidx.glance.appwidget.action`, not in `androidx.glance.action`.
 - A Glance widget recomposes on every emission it collects, so feed it the deduped `app.widget` flow, never the raw session state.
-- Android replays the original launch intent when it recreates an activity, which is why `shouldStartFromIntent` exists.
 - `enableEdgeToEdge()` follows the system theme. The app forces `SystemBarStyle.dark`.
 - The notification must not change every second: One UI's status-bar media chip restarts its scrolling text on every re-post. The rest countdown runs as the media card's progress bar (duration + position) instead.
 - `ModalBottomSheet` opens half-expanded by default and hides the buttons under the gesture bar.

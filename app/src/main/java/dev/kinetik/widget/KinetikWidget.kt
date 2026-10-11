@@ -111,7 +111,7 @@ private fun WidgetContent(m: WidgetModel) {
 @Composable
 private fun CompactContent(m: WidgetModel) {
     val context = LocalContext.current
-    val detail = if (m.startWorkoutId != null) "${m.headline} · ${m.sub}" else m.headline
+    val detail = m.headline
     Row(
         GlanceModifier.fillMaxSize().cornerRadius(20.dp).background(color(K.Card)).padding(horizontal = 14.dp)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
@@ -134,14 +134,11 @@ private fun CompactContent(m: WidgetModel) {
 
 private data class WidgetAction(val label: String, val primary: Boolean, val action: Action)
 
-/** Start when idle; Done / Pause / Resume / Skip during a workout. */
+/** Start (opens the app) when idle; Done / Pause / Resume / Skip during a workout. */
 @Composable
 private fun buttons(m: WidgetModel): List<WidgetAction> {
     val context = LocalContext.current
-    m.startWorkoutId?.let { id ->
-        val start = Intent(context, MainActivity::class.java).putExtra(MainActivity.EXTRA_START, id)
-        return listOf(WidgetAction("▶ Start", true, actionStartActivity(start)))
-    }
+    if (m.showStart) return listOf(WidgetAction("▶ Start", true, actionStartActivity(Intent(context, MainActivity::class.java))))
     return m.controls.map { c ->
         WidgetAction(c.label, c == Control.DONE, actionRunCallback<ControlAction>(actionParametersOf(ControlKey to c.name)))
     }

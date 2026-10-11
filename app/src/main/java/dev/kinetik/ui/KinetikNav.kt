@@ -1,5 +1,8 @@
 package dev.kinetik.ui
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,14 +25,18 @@ fun KinetikNav(mode: LayoutMode) {
     val session by app.session.state.collectAsStateWithLifecycle()
     val start = remember { if (session != null) "live" else "home" }
 
-    // A workout started from outside the app (the widget) jumps straight to the live screen.
+    // Whenever a workout is running (say the app is reopened mid-workout), show the live screen.
     LaunchedEffect(session != null) {
         if (session != null && nav.currentDestination?.route != "live") {
             nav.navigate("live") { launchSingleTop = true }
         }
     }
 
-    NavHost(nav, startDestination = start) {
+    // Quick cross-fades between screens; the navigation default (700 ms) felt sluggish.
+    NavHost(
+        nav, startDestination = start,
+        enterTransition = { fadeIn(tween(150)) }, exitTransition = { fadeOut(tween(150)) },
+    ) {
         composable("home") {
             HomeScreen(
                 mode = mode,
@@ -47,6 +54,6 @@ fun KinetikNav(mode: LayoutMode) {
                 if (!nav.popBackStack()) nav.navigate("home") { popUpTo("live") { inclusive = true } }
             })
         }
-        composable("settings") { SettingsScreen(onBack = { nav.popBackStack() }) }
+        composable("settings") { SettingsScreen(mode, onBack = { nav.popBackStack() }) }
     }
 }
